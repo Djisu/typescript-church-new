@@ -1,0 +1,1 @@
+This is a church management app. The frontend uses React-Vite-Typescript. Whereas the backend uses Node.js, Typescript and MongoDB. The App is used to manage users/administrative workers, members and events. The backend is almost finished while the frontend is under construction. The backend was tested with Postman and it is yet to be documented with Swagger.
