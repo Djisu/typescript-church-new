@@ -14,14 +14,72 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const Members_1 = require("../../../models/Members");
+const nodemailer_1 = __importDefault(require("nodemailer"));
+const crypto_1 = __importDefault(require("crypto"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const router = express_1.default.Router();
-// Create a new member
-router.post('/members', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const transport = nodemailer_1.default.createTransport({
+    host: "sandbox.smtp.mailtrap.io",
+    port: 2525,
+    auth: {
+        user: "a601af2b4b131b",
+        pass: "e260293c2a30e8"
+    }
+});
+// Create a new member and send email
+router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('in member router.post');
+    console.log('Incoming request body:', req.body);
     try {
-        const member = yield Members_1.Member.create(req.body);
-        res.status(201).json(member);
+        let { firstName, lastName, email, password, username } = req.body;
+        // Check if the user already exists
+        const existingUser = yield Members_1.Member.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+        // Create a verification token
+        const verificationToken = crypto_1.default.randomBytes(32).toString('hex');
+        // Hash the password before saving
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        // Create initial member data
+        const initialMemberData = {
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            username,
+            status: req.body.status || 'pending approval',
+            joinedDate: req.body.joinedDate || new Date(),
+            verificationToken,
+            affiliated: req.body.affiliated || null,
+            membership_type: req.body.membership_type || null,
+            phone: req.body.phone || null,
+            address: req.body.address || null,
+        };
+        // Create and save the new member
+        const newMember = new Members_1.Member(initialMemberData);
+        yield newMember.save();
+        // Send verification email
+        const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@example.com',
+            to: email,
+            subject: 'Email Verification',
+            text: `Please verify your email by clicking on the following link: ${verificationLink}`,
+            html: `<p>Please verify your email by clicking on the following link: <a href="${verificationLink}">${verificationLink}</a></p>`,
+        };
+        // Send the email
+        transport.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending email:', error);
+                return res.status(500).json({ message: 'Error sending email' });
+            }
+            console.log('Email sent successfully:', info);
+            res.status(201).json({ message: 'User registered. Check your email for verification.' });
+        });
     }
     catch (error) {
+        console.error('Error:', error);
         res.status(400).json({ message: error.message });
     }
 }));

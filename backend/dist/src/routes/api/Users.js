@@ -37,18 +37,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importStar(require("multer"));
+const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const Users_js_1 = require("../../../models/Users.js");
 const router = express_1.default.Router();
+// Define the uploads directory path under the public folder
+const uploadsDir = path_1.default.join(__dirname, 'public', 'uploads');
 // Create uploads directory if it doesn't exist
-if (!fs_1.default.existsSync('uploads')) {
-    fs_1.default.mkdirSync('uploads', { recursive: true });
+if (!fs_1.default.existsSync(uploadsDir)) {
+    fs_1.default.mkdirSync(uploadsDir, { recursive: true });
 }
 // Define the storage configuration with correct types
 const storage = (0, multer_1.diskStorage)({
     destination: (req, file, cb) => {
-        cb(null, 'uploads'); // Directory to save uploaded files
+        cb(null, uploadsDir); // Save uploaded files in the uploads directory under public
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`); // Unique filename

@@ -33,11 +33,12 @@ const initialState: MemberState = {
 export const createMember = createAsyncThunk(
   'member/create',
   async (memberData: Omit<IMember, '_id' | 'createdAt' | 'updatedAt'>) => {
-    console.log('in member/create')
 
-    const response = await axios.post('http://localhost:3000/api/members', memberData, {
+    console.log('in member/create', memberData)
+
+    const response = await axios.post('http://localhost:3000/api/members', JSON.stringify(memberData), {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     return response.data;

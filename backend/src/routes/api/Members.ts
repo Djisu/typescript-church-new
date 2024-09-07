@@ -1,15 +1,84 @@
 import express, { Request, Response } from 'express';
 import { Member, IMember } from '../../../models/Members';
+import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
+import crypto from 'crypto'
+import bcrypt from 'bcrypt';
 
 const router = express.Router();
 
-// Create a new member
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    const member: IMember = await Member.create(req.body);
+const transport = nodemailer.createTransport({
+    host: "sandbox.smtp.mailtrap.io",
+    port: 2525,
+    auth: {
+      user: "a601af2b4b131b",
+      pass: "e260293c2a30e8"
+    }
+  });
 
-    res.status(201).json(member);
+  // Create a new member and send email
+router.post('/', async (req: Request, res: Response) => {
+  console.log('in member router.post');
+  console.log('Incoming request body:', req.body);
+ 
+
+  try {
+    let { firstName, lastName, email, password, username } = req.body;
+
+    // Check if the user already exists
+    const existingUser = await Member.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Create a verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create initial member data
+    const initialMemberData = {
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      username,
+      status: req.body.status || 'pending approval',
+      joinedDate: req.body.joinedDate || new Date(),
+      verificationToken,
+      affiliated: req.body.affiliated || null,
+      membership_type: req.body.membership_type || null,
+      phone: req.body.phone || null,
+      address: req.body.address || null,
+    };
+
+    // Create and save the new member
+    const newMember = new Member(initialMemberData);
+    await newMember.save();
+
+    // Send verification email
+    const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
+
+    const mailOptions: SendMailOptions = {
+      from: process.env.EMAIL_USER || 'no-reply@example.com',
+      to: email,
+      subject: 'Email Verification',
+      text: `Please verify your email by clicking on the following link: ${verificationLink}`,
+      html: `<p>Please verify your email by clicking on the following link: <a href="${verificationLink}">${verificationLink}</a></p>`,
+    };
+
+    // Send the email
+    transport.sendMail(mailOptions, (error: Error | null, info: SentMessageInfo) => {
+      if (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({ message: 'Error sending email' });
+      }
+      console.log('Email sent successfully:', info);
+      res.status(201).json({ message: 'User registered. Check your email for verification.' });
+    });
+
   } catch (error: any) {
+    console.error('Error:', error);
     res.status(400).json({ message: error.message });
   }
 });
