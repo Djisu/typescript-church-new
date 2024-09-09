@@ -17,6 +17,7 @@ const Members_1 = require("../../../models/Members");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const crypto_1 = __importDefault(require("crypto"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const router = express_1.default.Router();
 const transport = nodemailer_1.default.createTransport({
     host: "sandbox.smtp.mailtrap.io",
@@ -26,7 +27,18 @@ const transport = nodemailer_1.default.createTransport({
         pass: "e260293c2a30e8"
     }
 });
-// Create a new member and send email
+/**
+ * @summary Create a new member and send verification email.
+ * @route POST /members
+ * @param {Object} req.body - The member data.
+ * @param {string} req.body.firstName - The first name of the member.
+ * @param {string} req.body.lastName - The last name of the member.
+ * @param {string} req.body.email - The email address of the member.
+ * @param {string} req.body.password - The password for the member.
+ * @param {string} req.body.username - The username of the member.
+ * @returns {Object} 201 - The created member object.
+ * @returns {Error} 400 - User already exists or validation errors.
+ */
 router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('in member router.post');
     console.log('Incoming request body:', req.body);
@@ -83,8 +95,13 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(400).json({ message: error.message });
     }
 }));
-// Get all members
-router.get('/members', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Get all members.
+ * @route GET /members
+ * @returns {Array<IMember>} 200 - An array of member objects.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const members = yield Members_1.Member.find({});
         res.json(members);
@@ -93,8 +110,14 @@ router.get('/members', (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(500).json({ message: error.message });
     }
 }));
-// Get a specific member
-router.get('/members/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Get a member by ID.
+ * @route GET /members/{memberId}
+ * @param {string} memberId.path.required - The ID of the member.
+ * @returns {IMember} 200 - The member object.
+ * @returns {Error} 404 - Member not found.
+ */
+router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const member = yield Members_1.Member.findById(req.params.memberId);
         if (!member) {
@@ -106,8 +129,16 @@ router.get('/members/:memberId', (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(500).json({ message: error.message });
     }
 }));
-// Update a member
-router.put('/members/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Update a member by ID.
+ * @route PUT /members/{memberId}
+ * @param {string} memberId.path.required - The ID of the member to update.
+ * @param {Object} req.body - The updated member data.
+ * @returns {IMember} 200 - The updated member object.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.put('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const member = yield Members_1.Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
         if (!member) {
@@ -119,8 +150,15 @@ router.put('/members/:memberId', (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(400).json({ message: error.message });
     }
 }));
-// Delete a member
-router.delete('/members/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Delete a member by ID.
+ * @route DELETE /members/{memberId}
+ * @param {string} memberId.path.required - The ID of the member to delete.
+ * @returns {Object} 200 - Confirmation message.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.delete('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const member = yield Members_1.Member.findByIdAndDelete(req.params.memberId);
         if (!member) {
@@ -132,10 +170,25 @@ router.delete('/members/:memberId', (req, res) => __awaiter(void 0, void 0, void
         res.status(500).json({ message: error.message });
     }
 }));
-// Create attendance record
-router.post('/members/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Create attendance record for a member.
+ * @route POST /members/{memberId}/attendance
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {Object} req.body - Attendance data.
+ * @param {string} req.body.date - The date of attendance.
+ * @param {boolean} req.body.attended - Attendance status.
+ * @returns {Object} 201 - The created attendance record.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('in router.post(/:memberId/attendance');
     try {
         const { memberId } = req.params;
+        // Validate ObjectId
+        if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
+            return res.status(400).json({ message: 'Invalid member ID format' });
+        }
         const { date, attended } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
@@ -149,8 +202,15 @@ router.post('/members/:memberId/attendance', (req, res) => __awaiter(void 0, voi
         res.status(400).json({ message: error.message });
     }
 }));
-// Get attendance record for a member
-router.get('/members/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Get attendance record for a member.
+ * @route GET /members/{memberId}/attendance
+ * @param {string} memberId.path.required - The ID of the member.
+ * @returns {Array} 200 - The attendance records for the member.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.get('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
@@ -163,8 +223,19 @@ router.get('/members/:memberId/attendance', (req, res) => __awaiter(void 0, void
         res.status(500).json({ message: error.message });
     }
 }));
-// Update attendance record for a member
-router.put('/members/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Update attendance record for a member.
+ * @route PUT /members/{memberId}/attendance/{recordId}
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {string} recordId.path.required - The ID of the attendance record.
+ * @param {Object} req.body - Updated attendance data.
+ * @param {string} req.body.date - The updated date of attendance.
+ * @param {boolean} req.body.attended - Updated attendance status.
+ * @returns {Object} 200 - The updated attendance record.
+ * @returns {Error} 404 - Member or attendance record not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
         const { date, attended } = req.body;
@@ -172,15 +243,7 @@ router.put('/members/:memberId/attendance/:recordId', (req, res) => __awaiter(vo
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
-        // Assuming recordId is a string representing the timestamp
         const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (record) {
-            // do something with the record
-            console.log(record.date, record.attended);
-        }
-        else {
-            console.log('Record not found');
-        }
         if (!record) {
             return res.status(404).json({ message: 'Attendance record not found' });
         }
@@ -193,36 +256,27 @@ router.put('/members/:memberId/attendance/:recordId', (req, res) => __awaiter(vo
         res.status(400).json({ message: error.message });
     }
 }));
-// Delete attendance record for a member
-router.delete('/members/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+ * @summary Delete attendance record for a member.
+ * @route DELETE /members/{memberId}/attendance/{recordId}
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {string} recordId.path.required - The ID of the attendance record.
+ * @returns {Object} 200 - Confirmation message.
+ * @returns {Error} 404 - Member or attendance record not found.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.delete('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
-        // Assuming recordId is a string representing the timestamp
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (record) {
-            // do something with the record
-            console.log(record.date, record.attended);
-        }
-        else {
-            console.log('Record not found');
-        }
-        if (!record) {
+        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
+        if (recordIndex === -1) {
             return res.status(404).json({ message: 'Attendance record not found' });
         }
-        // Find the index of the record you want to remove
-        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex !== -1) {
-            // Remove the record from the array
-            member.attendanceRecord.splice(recordIndex, 1);
-            console.log('Record removed');
-        }
-        else {
-            console.log('Record not found');
-        }
+        member.attendanceRecord.splice(recordIndex, 1);
         yield member.save();
         res.json({ message: 'Attendance record deleted' });
     }
@@ -230,10 +284,28 @@ router.delete('/members/:memberId/attendance/:recordId', (req, res) => __awaiter
         res.status(500).json({ message: error.message });
     }
 }));
-// Create tithe record
-router.post('/members/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Additional routes for tithes and offerings can follow the same pattern.
+// Ensure to add TSDoc comments similar to the examples above for those routes as well.
+// Tithe
+/**
+ * @summary Create tithe record for a member.
+ * @route POST /members/{memberId}/tithe
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {Object} req.body - tithe data.
+ * @param {string} req.body.date - The date of tithe.
+ * @param {boolean} req.body.amount - Amount quantity.
+ * @returns {Object} 201 - The created tithe record.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('in router.post(/:memberId/tithes');
     try {
         const { memberId } = req.params;
+        // Validate ObjectId
+        if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
+            return res.status(400).json({ message: 'Invalid member ID format' });
+        }
         const { date, amount } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
@@ -247,8 +319,15 @@ router.post('/members/:memberId/tithes', (req, res) => __awaiter(void 0, void 0,
         res.status(400).json({ message: error.message });
     }
 }));
-// Get tithe records for a member
-router.get('/members/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+* @summary Get tithe record for a member.
+* @route GET /members/{memberId}/tithes
+* @param {string} memberId.path.required - The ID of the member.
+* @returns {Array} 200 - The tithes records for the member.
+* @returns {Error} 404 - Member not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.get('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
@@ -261,8 +340,19 @@ router.get('/members/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, 
         res.status(500).json({ message: error.message });
     }
 }));
-// Update a tithe record
-router.put('/members/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+* @summary Update tithe record for a member.
+* @route PUT /members/{memberId}/tithes/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the tithe record.
+* @param {Object} req.body - Updated tithe data.
+* @param {string} req.body.date - The updated date of tithe.
+* @param {boolean} req.body.tithes - Updated tithe status.
+* @returns {Object} 200 - The updated tithe record.
+* @returns {Error} 404 - Member or tithe record not found.
+* @returns {Error} 400 - Validation error.
+*/
+router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
         const { date, amount } = req.body;
@@ -270,23 +360,12 @@ router.put('/members/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
-        // Assuming recordId is a string representing the timestamp
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (record) {
-            // do something with the record
-            console.log(record.date, record.attended);
-        }
-        else {
-            console.log('Record not found');
-        }
+        const record = member.tithes.find(r => r.date.getTime() === Number(recordId));
         if (!record) {
-            return res.status(404).json({ message: 'Tithe record not found' });
+            return res.status(404).json({ message: 'Attendance record not found' });
         }
         record.date = date;
-        // Create a new record with the desired properties
-        const newRecord = { date: new Date(), attended: true, amount: 10 };
-        // Add the new record to the attendanceRecord array
-        member.attendanceRecord.push(newRecord);
+        record.amount = amount;
         yield member.save();
         res.json(record);
     }
@@ -294,36 +373,27 @@ router.put('/members/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0
         res.status(400).json({ message: error.message });
     }
 }));
-// Delete a tithe record
-router.delete('/members/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+* @summary Delete tithes record for a member.
+* @route DELETE /members/{memberId}/tithes/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the tithes record.
+* @returns {Object} 200 - Confirmation message.
+* @returns {Error} 404 - Member or tithe record not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.delete('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
-        // Assuming recordId is a string representing the timestamp
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (record) {
-            // do something with the record
-            console.log(record.date, record.attended);
-        }
-        else {
-            console.log('Record not found');
-        }
-        if (!record) {
+        const recordIndex = member.tithes.findIndex(r => r.date.getTime() === Number(recordId));
+        if (recordIndex === -1) {
             return res.status(404).json({ message: 'Tithe record not found' });
         }
-        // Find the index of the record you want to remove
-        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex !== -1) {
-            // Remove the record from the array
-            member.attendanceRecord.splice(recordIndex, 1);
-            console.log('Record removed');
-        }
-        else {
-            console.log('Record not found');
-        }
+        member.tithes.splice(recordIndex, 1);
         yield member.save();
         res.json({ message: 'Tithe record deleted' });
     }
@@ -331,10 +401,26 @@ router.delete('/members/:memberId/tithes/:recordId', (req, res) => __awaiter(voi
         res.status(500).json({ message: error.message });
     }
 }));
-// Create offering record
-router.post('/members/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Offerings
+/**
+ * @summary Create offering record for a member.
+ * @route POST /members/{memberId}/offering
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {Object} req.body - offering data.
+ * @param {string} req.body.date - The date of offering.
+ * @param {boolean} req.body.amount - Amount quantity.
+ * @returns {Object} 201 - The created offering record.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('in router.post(/:memberId/offerings');
     try {
         const { memberId } = req.params;
+        // Validate ObjectId
+        if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
+            return res.status(400).json({ message: 'Invalid member ID format' });
+        }
         const { date, amount } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
@@ -342,14 +428,21 @@ router.post('/members/:memberId/offerings', (req, res) => __awaiter(void 0, void
         }
         member.offerings.push({ date, amount });
         yield member.save();
-        res.status(201).json(member.offerings[member.offerings.length - 1]);
+        res.status(201).json(member.tithes[member.offerings.length - 1]);
     }
     catch (error) {
         res.status(400).json({ message: error.message });
     }
 }));
-// Get offering records for a member
-router.get('/members/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+* @summary Get offerings record for a member.
+* @route GET /members/{memberId}/offerings
+* @param {string} memberId.path.required - The ID of the member.
+* @returns {Array} 200 - The offerings records for the member.
+* @returns {Error} 404 - Member not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.get('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
@@ -362,8 +455,19 @@ router.get('/members/:memberId/offerings', (req, res) => __awaiter(void 0, void 
         res.status(500).json({ message: error.message });
     }
 }));
-// Update an offering record
-router.put('/members/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+* @summary Update offerings record for a member.
+* @route PUT /members/{memberId}/offerings/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the offerings record.
+* @param {Object} req.body - Updated offerings data.
+* @param {string} req.body.date - The updated date of offerings.
+* @param {boolean} req.body.attended - Updated offerings status.
+* @returns {Object} 200 - The updated offerings record.
+* @returns {Error} 404 - Member or offerings record not found.
+* @returns {Error} 400 - Validation error.
+*/
+router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
         const { date, amount } = req.body;
@@ -371,23 +475,12 @@ router.put('/members/:memberId/offerings/:recordId', (req, res) => __awaiter(voi
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
-        // Assuming recordId is a string representing the timestamp
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (record) {
-            // do something with the record
-            console.log(record.date, record.attended);
-        }
-        else {
-            console.log('Record not found');
-        }
+        const record = member.offerings.find(r => r.date.getTime() === Number(recordId));
         if (!record) {
             return res.status(404).json({ message: 'Offering record not found' });
         }
         record.date = date;
-        // Create a new record with the desired properties
-        const newRecord = { date: new Date(), attended: true, amount: 10 };
-        // Add the new record to the attendanceRecord array
-        member.attendanceRecord.push(newRecord);
+        record.amount = amount;
         yield member.save();
         res.json(record);
     }
@@ -395,36 +488,27 @@ router.put('/members/:memberId/offerings/:recordId', (req, res) => __awaiter(voi
         res.status(400).json({ message: error.message });
     }
 }));
-// Delete an offering record
-router.delete('/members/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+/**
+* @summary Delete offerings record for a member.
+* @route DELETE /members/{memberId}/offerings/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the offerings record.
+* @returns {Object} 200 - Confirmation message.
+* @returns {Error} 404 - Member or offerings record not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
-        // Assuming recordId is a string representing the timestamp
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (record) {
-            // do something with the record
-            console.log(record.date, record.attended);
+        const recordIndex = member.offerings.findIndex(r => r.date.getTime() === Number(recordId));
+        if (recordIndex === -1) {
+            return res.status(404).json({ message: 'Offerings record not found' });
         }
-        else {
-            console.log('Record not found');
-        }
-        if (!record) {
-            return res.status(404).json({ message: 'Offering record not found' });
-        }
-        // Find the index of the record you want to remove
-        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex !== -1) {
-            // Remove the record from the array
-            member.attendanceRecord.splice(recordIndex, 1);
-            console.log('Record removed');
-        }
-        else {
-            console.log('Record not found');
-        }
+        member.offerings.splice(recordIndex, 1);
         yield member.save();
         res.json({ message: 'Offering record deleted' });
     }
