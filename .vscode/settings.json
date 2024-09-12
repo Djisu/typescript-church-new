@@ -9,7 +9,11 @@
         "Membe",
         "memberprofile",
         "memberregister",
+        "password-rese",
         "reduxjs",
+        "requestpasswordreset",
+        "resetpassword",
+        "tokenx",
         "userpage",
         "uuidv"
     ]

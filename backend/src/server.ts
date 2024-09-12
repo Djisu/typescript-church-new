@@ -9,6 +9,12 @@ import authRoute from './routes/api/Auth';
 //import fileUpload from 'express-fileupload';
 import connectDB from '../config/db';
 import colors from 'colors';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
+console.log('Email User:', process.env.EMAIL_USER);
+console.log('App Password:', process.env.APP_PASSWORD);
 
 console.log('in backend server.js');
 
@@ -54,7 +60,7 @@ const storage = diskStorage({
 
 app.use(express.urlencoded({ extended: true }));
 
-const port = process.env.PORT || 3000;
+
 
 if (process.env.NODE_ENV === 'development') {
   Error.stackTraceLimit = Infinity;
@@ -78,6 +84,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Start the server
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

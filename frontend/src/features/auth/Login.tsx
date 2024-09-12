@@ -5,6 +5,7 @@ import { useAppDispatch } from '../../app/hooks'
 //import { selectAllUsers } from '../user/userSlice'
 import { login } from './authSlice'
 import { detokenize } from './detokenize'
+import './Login.css'; // Import the CSS file
 //import { RootState } from '../../app/store'
 
 // interface FormElements extends HTMLFormControlsCollection {
@@ -58,10 +59,10 @@ export const Login = () => {
   };
 
   return (
-    <section>
+    <section className="login-container">
       <h2>Welcome to Church!</h2>
       <h3>Please log in:</h3>
-      <form onSubmit={handleSubmit}>
+      <form className="login-form" onSubmit={handleSubmit}>
         <div className="mb-3">
           <label htmlFor="email" className="form-label">Email:</label>
           <input id="email" name="email" className="form-control" type="text" required autoComplete="email"  />

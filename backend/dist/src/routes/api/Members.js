@@ -18,15 +18,26 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const crypto_1 = __importDefault(require("crypto"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const frontendUrl = process.env.FRONTEND_URL; // Access the environment variable
+const emailPassword = process.env.EMAIL_PASS;
+const appPassword = process.env.APP_PASSWORD;
+const emailUser = process.env.EMAIL_USER;
 const router = express_1.default.Router();
 const transport = nodemailer_1.default.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: 'gmail',
     auth: {
-        user: "a601af2b4b131b",
-        pass: "e260293c2a30e8"
+        user: emailUser,
+        pass: appPassword //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD'
     }
 });
+// const transport = nodemailer.createTransport({
+//     host: "sandbox.smtp.mailtrap.io",
+//     port: 2525,
+//     auth: {
+//         user: "a601af2b4b131b",
+//         pass: "e260293c2a30e8"
+//     }
+// });
 /**
  * @summary Create a new member and send verification email.
  * @route POST /members

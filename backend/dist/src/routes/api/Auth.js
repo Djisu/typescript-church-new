@@ -17,6 +17,11 @@ const express_validator_1 = require("express-validator");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../../utils/config"));
 const Users_js_1 = require("../../../models/Users.js");
+const email_1 = require("../../utils/email");
+const crypto_1 = __importDefault(require("crypto"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const router = express_1.default.Router();
 router.post('/', [
     (0, express_validator_1.check)('email', 'Please include a valid email').isEmail(),
@@ -55,6 +60,42 @@ router.post('/', [
         console.error('Error in /api/auth route:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
+}));
+// Reset password
+router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('in backend /request-password-reset');
+    const { email } = req.body;
+    console.log('email: ', email);
+    const user = yield Users_js_1.User.findOne({ email });
+    if (!user) {
+        return res.status(404).json({ message: 'Email not found.' });
+    }
+    const token = crypto_1.default.randomBytes(32).toString('hex'); // Generate token
+    user.resetToken = token; // Save token to user record
+    user.resetTokenExpiration = new Date(Date.now() + 3600000); // 1 hour expiration
+    yield user.save();
+    console.log('after user token reset');
+    yield (0, email_1.sendResetEmail)(email, token); // Function to send email
+    res.status(200).json({ message: 'Password reset email sent.' });
+}));
+// Password reset
+router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token, newPassword } = req.body;
+    const user = yield Users_js_1.User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+    if (!user) {
+        return res.status(400).json({ message: 'Invalid or expired token.' });
+    }
+    // Validate new password (e.g., length, complexity)
+    if (newPassword.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    }
+    // Hash the password
+    const salt = yield bcrypt_1.default.genSalt(10);
+    user.password = yield bcrypt_1.default.hash(newPassword, salt);
+    user.resetToken = undefined; // Clear the token
+    user.resetTokenExpiration = undefined; // Clear expiration
+    yield user.save();
+    res.status(200).json({ message: 'Password has been reset successfully.' });
 }));
 exports.default = router;
 // import express, { Request, Response } from 'express';

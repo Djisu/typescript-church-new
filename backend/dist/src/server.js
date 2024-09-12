@@ -14,6 +14,11 @@ const Auth_1 = __importDefault(require("./routes/api/Auth"));
 //import fileUpload from 'express-fileupload';
 const db_1 = __importDefault(require("../config/db"));
 const colors_1 = __importDefault(require("colors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+// Load environment variables from .env file
+dotenv_1.default.config();
+console.log('Email User:', process.env.EMAIL_USER);
+console.log('App Password:', process.env.APP_PASSWORD);
 console.log('in backend server.js');
 mongoose_1.default.set('strictQuery', true);
 const log = (message) => {
@@ -46,7 +51,6 @@ const storage = (0, multer_1.diskStorage)({
     },
 });
 app.use(express_1.default.urlencoded({ extended: true }));
-const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV === 'development') {
     Error.stackTraceLimit = Infinity;
 }
@@ -65,6 +69,7 @@ app.get('/', (req, res) => {
     res.send('Welcome to the API!');
 });
 // Start the server
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

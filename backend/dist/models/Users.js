@@ -49,6 +49,8 @@ exports.UserSchema = new mongoose_1.Schema({
     role: { type: String, required: true },
     avatar: { type: String, default: null },
     token: '',
+    resetToken: { type: String, default: null }, // Add this line
+    resetTokenExpiration: { type: Date, default: null }, // Add this line
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 });

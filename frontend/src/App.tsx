@@ -13,6 +13,9 @@ import MemberRegister from './features/member/MemberRegister';
 import MemberProfile from './features/member/MemberProfile';
 import Users from './features/user/Users';
 import Events from './features/event/Events';
+
+import RequestPasswordReset from './features/auth/RequestPasswordReset';
+import ResetPassword from './features/auth/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import './index.css'
 
@@ -38,6 +41,7 @@ const App: React.FC = () => {
         <AppContent>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/memberregister" element={<MemberRegister />} />
@@ -49,6 +53,7 @@ const App: React.FC = () => {
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/auth/request-password-reset" element={<RequestPasswordReset />} />
             <Route path="*" element={<NoPage />} />
           </Routes>
         </AppContent>

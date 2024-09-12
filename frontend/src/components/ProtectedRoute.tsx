@@ -5,6 +5,7 @@ import { useAppSelector } from '../app/hooks';
 
 const ProtectedRoute = () => {
     const username = useAppSelector((state: RootState) => state.auth.user?.name || '');
+    
     return username ? <Outlet /> : <Navigate to="/login" replace />;
 }
 export default ProtectedRoute

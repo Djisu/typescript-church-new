@@ -14,6 +14,8 @@ export interface IUser extends Document {
   role: string;
   avatar?: string | null;
   token?: string | null;
+  resetToken?: string | null; // Add this line
+  resetTokenExpiration?: Date | null; // Add this line
   createdAt?: Date;
   updatedAt?: Date;
   comparePassword(password: string): Promise<boolean>;
@@ -26,6 +28,8 @@ export const UserSchema: Schema = new Schema({
   role: { type: String, required: true },
   avatar: { type: String, default: null },
   token: '',
+  resetToken: { type: String, default: null }, // Add this line
+  resetTokenExpiration: { type: Date, default: null }, // Add this line
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
