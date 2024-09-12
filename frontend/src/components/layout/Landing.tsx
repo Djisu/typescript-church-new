@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { logout } from '../../features/auth/authSlice';
 import { useAppDispatch } from '../../app/hooks';
-//import './Login.css'; // Import the CSS file
 import '../../features/auth/login.css'
+import './landing.css'
 
 
 interface IProps {
@@ -27,7 +27,7 @@ const Landing: React.FC<IProps> = ({ isAuthenticated }) => {
   // }
 
   return (
-    <section className="login-container">
+    <section className="login-container landing-container">
       <div className="dark-overlay">
         <div className="landing-inner">
           <h1 className="x-large">ChurchSoft</h1>

@@ -1,0 +1,64 @@
+/* Landing.css */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full viewport height */
+    padding: 20px;
+    position: relative; /* Allow positioning of inner elements */
+    overflow: hidden; /* Prevent overflow */
+    color: white; /* Text color for better visibility */
+  }
+  
+  .dark-overlay {
+    position: absolute; /* Position overlay */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent dark overlay */
+    z-index: 1; /* Overlay on top */
+  }
+  
+  .landing-inner {
+    position: relative; /* Position relative for inner content */
+    z-index: 2; /* Ensure text is on top of the overlay */
+    text-align: center;
+  }
+  
+  .landing-container {
+    background-image: url('../../assets/showcase.jpg'); /* Add your background image */
+    background-size: cover; /* Cover the entire container */
+    background-position: center; /* Center the image */
+  }
+  
+  .buttons {
+    margin: 10px 0; /* Space between buttons */
+  }
+  
+  .btn-primary {
+    background-color: #007bff; /* Primary button color */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+  }
+  
+  .btn-light {
+    background-color: #f9f9f9; /* Light button color */
+    color: #333;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-light:hover {
+    background-color: #e2e2e2; /* Slightly darker on hover */
+  }

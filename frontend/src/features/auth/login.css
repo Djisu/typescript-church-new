@@ -1,4 +1,4 @@
-/* login.css */
+/* Login.css */
 .login-container {
     display: flex;
     flex-direction: column;
@@ -18,11 +18,21 @@
     max-width: 400px; /* Max width for larger screens */
   }
   
-  .login-form h2 {
+  .login-form h2,
+  .login-form h3 {
     margin-bottom: 20px;
+    text-align: center;
   }
   
-  .login-form input {
+  .form-label {
+    display: block; /* Ensure the label takes a full line */
+    background-color: black; /* Set background color to black */
+    color: white; /* Change text color to white for contrast */
+    padding: 5px; /* Add some padding for better appearance */
+    border-radius: 4px; /* Add border radius */
+  }
+  
+  .form-control {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
@@ -30,7 +40,7 @@
     border-radius: 4px;
   }
   
-  .login-form button {
+  .btn-primary {
     width: 100%;
     padding: 10px;
     background-color: #007bff; /* Primary color */
@@ -41,16 +51,12 @@
     transition: background-color 0.3s;
   }
   
-  .login-form button:hover {
+  .btn-primary:hover {
     background-color: #0056b3; /* Darker shade on hover */
   }
   
-  .success-message {
-    color: green;
-    margin-top: 10px;
-  }
-  
-  .error-message {
-    color: red;
-    margin-top: 10px;
+  .form-text {
+    display: block;
+    margin-top: 5px;
+    text-align: center;
   }
