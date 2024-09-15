@@ -33,8 +33,8 @@ const MemberSchema = new mongoose_1.Schema({
     password: { type: String, required: true },
     phone: { type: String, required: false },
     address: { type: String, required: false },
-    membership_type: { type: String, required: false },
-    status: { type: String, required: true },
+    membership_type: { type: String, required: false }, // "regular member", "youth member", "senior member"
+    status: { type: String, required: true }, // "pending approval", "approved", "rejected"
     affiliated: { type: String, required: false },
     joinedDate: { type: Date, required: false },
     attendanceRecord: [
