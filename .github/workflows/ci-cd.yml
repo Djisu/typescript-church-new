@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # or your preferred version
+          node-version: '14'
 
       - name: Install dependencies
         run: npm install
@@ -31,17 +31,7 @@ jobs:
       - name: Build application
         run: npm run build
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build  # Ensure this job runs only after build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Deploy to Heroku
-        uses: akhileshns/heroku-deploy@v3.11.0
-        with:
-          heroku_app_name: <your-heroku-app-name>
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          branch: main
+      - name: Deploy to Railway
+        run: |
+          curl -sSL https://railway.app/install.sh | sh
+          railway up
