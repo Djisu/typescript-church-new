@@ -6,47 +6,27 @@ import eventsRoute from './routes/api/Events';
 import membersRoute from './routes/api/Members';
 import usersRoute from './routes/api/Users';
 import authRoute from './routes/api/Auth';
-//import fileUpload from 'express-fileupload';
-import connectDB from '../config/db';
-import colors from 'colors';
 import dotenv from 'dotenv';
+import colors from 'colors';
+import { ConnectOptions } from 'mongoose';
 
 // Load environment variables from .env file
 dotenv.config();
+
 console.log('Email User:', process.env.EMAIL_USER);
 console.log('App Password:', process.env.APP_PASSWORD);
-
-console.log('in backend server.js');
-
-mongoose.set('strictQuery', true);
-
-const log = (message: any) => {
-  console.log(colors.cyan(message));
-};
-
-const error = (message: any) => {
-  console.error(colors.red(message));
-};
+console.log('MongoDB URI:', process.env.MONGODB_URI);
 
 // Initialize the Express application
 const app: Express = express();
+const dbURI: string = process.env.MONGODB_URI || 'your_default_connection_string'; // Use the environment variable
 
-// Connect to MongoDB
-connectDB();
+mongoose.set('strictQuery', true);
 
-// Configure middleware
-app.use(cors())
-
-// Configure CORS
-// const corsOptions = {
-//   origin: 'http://localhost/5173', // Allow your frontend's origin
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Add any methods you need
-//   credentials: true, // Optional: if you need to send cookies
-// };
-
-// app.use(cors(corsOptions));
-
+// Middleware configuration
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Multer storage configuration
 const storage = diskStorage({
@@ -57,14 +37,6 @@ const storage = diskStorage({
     cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
   },
 });
-
-app.use(express.urlencoded({ extended: true }));
-
-
-
-if (process.env.NODE_ENV === 'development') {
-  Error.stackTraceLimit = Infinity;
-}
 
 // Middleware to log incoming requests
 app.use((req: Request, res: Response, next: any) => {
@@ -83,20 +55,45 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the API!');
 });
 
+// Connect to MongoDB
+mongoose.disconnect()
+const connectDB = async () => {
+  try {
+    await mongoose.disconnect();
+    console.log('Disconnected from MongoDB');
+  } catch (error) {
+      console.error('Error during disconnection:', error);
+  }
+  
+  try {
+    await mongoose.connect(dbURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    } as ConnectOptions);
+    console.log('Connected to MongoDB');
+
+    // Event listeners for the connection
+    mongoose.connection.on('disconnected', () => {
+      console.log('Disconnected from MongoDB');
+    });
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+  }
+};
+
 // Start the server
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
+  await connectDB(); // Connect to MongoDB here
 });
 
-// Handle SIGUSR2 signal (typically used for nodemon restarts)
-process.once('SIGUSR2', function () {
+// Handle process signals
+process.once('SIGUSR2', () => {
   process.kill(process.pid, 'SIGUSR2');
 });
 
-// Handle SIGINT signal (typically used for Ctrl+C)
-process.on('SIGINT', function () {
+process.on('SIGINT', () => {
   // Perform any cleanup tasks or shutdown operations here
-  // Terminate the process gracefully
   process.exit(0);
 });

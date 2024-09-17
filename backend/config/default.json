@@ -1,7 +1,7 @@
 {
-    "mongoURI": "mongodb://127.0.0.1:27017/churchsoft",
-    "jwtSecret": "mysecrettoken",
-    "emailPassword": "Timbuk2tudjesu",
-    "yahooAppPassword": "dqkdcsiflkfwbvyc"
-  }
+  "mongoURI": "mongodb+srv://Djesu:Timbuk2tudjesu@cluster0.nlxec.mongodb.net/churchsoft?retryWrites=true&w=majority&appName=Cluster0",
+  "jwtSecret": "mysecrettoken",
+  "emailPassword": "Timbuk2tudjesu",
+  "yahooAppPassword": "dqkdcsiflkfwbvyc"
+}
   

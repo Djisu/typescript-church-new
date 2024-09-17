@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -11,36 +20,20 @@ const Events_1 = __importDefault(require("./routes/api/Events"));
 const Members_1 = __importDefault(require("./routes/api/Members"));
 const Users_1 = __importDefault(require("./routes/api/Users"));
 const Auth_1 = __importDefault(require("./routes/api/Auth"));
-//import fileUpload from 'express-fileupload';
-const db_1 = __importDefault(require("../config/db"));
-const colors_1 = __importDefault(require("colors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables from .env file
 dotenv_1.default.config();
 console.log('Email User:', process.env.EMAIL_USER);
 console.log('App Password:', process.env.APP_PASSWORD);
-console.log('in backend server.js');
-mongoose_1.default.set('strictQuery', true);
-const log = (message) => {
-    console.log(colors_1.default.cyan(message));
-};
-const error = (message) => {
-    console.error(colors_1.default.red(message));
-};
+console.log('MongoDB URI:', process.env.MONGODB_URI);
 // Initialize the Express application
 const app = (0, express_1.default)();
-// Connect to MongoDB
-(0, db_1.default)();
-// Configure middleware
+const dbURI = process.env.MONGODB_URI || 'your_default_connection_string'; // Use the environment variable
+mongoose_1.default.set('strictQuery', true);
+// Middleware configuration
 app.use((0, cors_1.default)());
-// Configure CORS
-// const corsOptions = {
-//   origin: 'http://localhost/5173', // Allow your frontend's origin
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Add any methods you need
-//   credentials: true, // Optional: if you need to send cookies
-// };
-// app.use(cors(corsOptions));
 app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
 // Multer storage configuration
 const storage = (0, multer_1.diskStorage)({
     destination: (req, file, cb) => {
@@ -50,10 +43,6 @@ const storage = (0, multer_1.diskStorage)({
         cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
     },
 });
-app.use(express_1.default.urlencoded({ extended: true }));
-if (process.env.NODE_ENV === 'development') {
-    Error.stackTraceLimit = Infinity;
-}
 // Middleware to log incoming requests
 app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.originalUrl}`);
@@ -68,19 +57,43 @@ app.use('/api/auth', Auth_1.default);
 app.get('/', (req, res) => {
     res.send('Welcome to the API!');
 });
+// Connect to MongoDB
+mongoose_1.default.disconnect();
+const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield mongoose_1.default.disconnect();
+        console.log('Disconnected from MongoDB');
+    }
+    catch (error) {
+        console.error('Error during disconnection:', error);
+    }
+    try {
+        yield mongoose_1.default.connect(dbURI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('Connected to MongoDB');
+        // Event listeners for the connection
+        mongoose_1.default.connection.on('disconnected', () => {
+            console.log('Disconnected from MongoDB');
+        });
+    }
+    catch (err) {
+        console.error('MongoDB connection error:', err);
+    }
+});
 // Start the server
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Server is running on port ${port}`);
-});
-// Handle SIGUSR2 signal (typically used for nodemon restarts)
-process.once('SIGUSR2', function () {
+    yield connectDB(); // Connect to MongoDB here
+}));
+// Handle process signals
+process.once('SIGUSR2', () => {
     process.kill(process.pid, 'SIGUSR2');
 });
-// Handle SIGINT signal (typically used for Ctrl+C)
-process.on('SIGINT', function () {
+process.on('SIGINT', () => {
     // Perform any cleanup tasks or shutdown operations here
-    // Terminate the process gracefully
     process.exit(0);
 });
 //# sourceMappingURL=server.js.map
