@@ -4,7 +4,7 @@
     "description": "A church management system built with Node.js and MongoDB",
     "main": "dist/server.js",
     "scripts": {
-        "build": "tsc",
+        "build": "tsc && cd ../frontend && npm run build",
         "start": "node dist/src/server.js",
         "dev": "concurrently --kill-others-on-fail \"nodemon dist/src/server.js\" \"wait-on http://localhost:3000 && npm run frontend && open http://localhost:5173\"",
         "test": "jest",

@@ -9,6 +9,9 @@ import authRoute from './routes/api/Auth';
 import dotenv from 'dotenv';
 import colors from 'colors';
 import { ConnectOptions } from 'mongoose';
+import path  from 'path';
+
+mongoose.set('strictQuery', true);
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,9 +22,14 @@ console.log('MongoDB URI:', process.env.MONGODB_URI);
 
 // Initialize the Express application
 const app: Express = express();
+
+// Serve static files from the frontend build directory
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+
 const dbURI: string = process.env.MONGODB_URI || 'your_default_connection_string'; // Use the environment variable
 
-mongoose.set('strictQuery', true);
+
 
 // Middleware configuration
 app.use(cors());
@@ -55,6 +63,11 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the API!');
 });
 
+// Catch-all route to serve the frontend application
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
+
 // Connect to MongoDB
 mongoose.disconnect()
 const connectDB = async () => {
@@ -64,7 +77,7 @@ const connectDB = async () => {
   } catch (error) {
       console.error('Error during disconnection:', error);
   }
-  
+
   try {
     await mongoose.connect(dbURI, {
       useNewUrlParser: true,
