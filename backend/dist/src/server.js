@@ -21,6 +21,8 @@ const Members_1 = __importDefault(require("./routes/api/Members"));
 const Users_1 = __importDefault(require("./routes/api/Users"));
 const Auth_1 = __importDefault(require("./routes/api/Auth"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
+mongoose_1.default.set('strictQuery', true);
 // Load environment variables from .env file
 dotenv_1.default.config();
 console.log('Email User:', process.env.EMAIL_USER);
@@ -28,8 +30,9 @@ console.log('App Password:', process.env.APP_PASSWORD);
 console.log('MongoDB URI:', process.env.MONGODB_URI);
 // Initialize the Express application
 const app = (0, express_1.default)();
+// Serve static files from the frontend build directory
+app.use(express_1.default.static(path_1.default.join(__dirname, '../frontend/dist')));
 const dbURI = process.env.MONGODB_URI || 'your_default_connection_string'; // Use the environment variable
-mongoose_1.default.set('strictQuery', true);
 // Middleware configuration
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -56,6 +59,10 @@ app.use('/api/auth', Auth_1.default);
 // Default route
 app.get('/', (req, res) => {
     res.send('Welcome to the API!');
+});
+// Catch-all route to serve the frontend application
+app.get('*', (req, res) => {
+    res.sendFile(path_1.default.join(__dirname, '../frontend/dist/index.html'));
 });
 // Connect to MongoDB
 mongoose_1.default.disconnect();
