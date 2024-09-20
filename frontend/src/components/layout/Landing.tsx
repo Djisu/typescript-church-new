@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { logout } from '../../features/auth/authSlice';
 import { useAppDispatch } from '../../app/hooks';
-import '../../features/auth/login.css'
-import './landing.css'
+import '../../features/auth/Login.css'
+import './Landing.css'
 
 
 interface IProps {
