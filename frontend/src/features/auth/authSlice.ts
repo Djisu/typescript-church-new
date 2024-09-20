@@ -48,7 +48,7 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }) => {
 
-    //console.log('in auth/login', credentials)
+    console.log('in auth/login', credentials)
 
     //const response = await axios.post('/api/auth', credentials);
     const response = await axios.post('http://localhost:3000/api/auth', credentials);

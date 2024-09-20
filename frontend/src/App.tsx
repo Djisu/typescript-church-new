@@ -9,10 +9,14 @@ import { ListUsers } from './features/user/ListUsers';
 import Landing from './components/layout/Landing';
 import Register from './features/auth/Register';
 import NoPage from './components/layout/NoPage';
-import MemberRegister from './features/member/MemberRegister';
-import MemberProfile from './features/member/MemberProfile';
+
 import Users from './features/user/Users';
 import Events from './features/event/Events';
+
+import MemberRegister from './features/member/MemberRegister';
+import MemberProfile from './features/member/MemberProfile';
+import ListMembers from './features/member/ListMembers';
+import MemberDetail from './features/member/MemberDetail';
 
 import RequestPasswordReset from './features/auth/RequestPasswordReset';
 import ResetPassword from './features/auth/ResetPassword';
@@ -44,12 +48,18 @@ const App: React.FC = () => {
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+
               <Route path="/memberregister" element={<MemberRegister />} />
               <Route path="/memberprofile" element={<MemberProfile />} />
+              <Route path="/member/listmembers" element={<ListMembers />} />
+              <Route path="/memberdetail" element={<MemberDetail />} />
+
               <Route path="/users" element={<Users />} />
               <Route path="/userpage" element={<UserPage />} />
-              <Route path="/events" element={<Events />} />
               <Route path="/user/listusers" element={<ListUsers />} />
+
+              <Route path="/events" element={<Events />} />
+             
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

@@ -107,7 +107,9 @@ export const NavigationBar = () => {
 
   const navigate = useNavigate();
   const username = useAppSelector((state: RootState) => state.auth.user?.name || '');
+
   const [$dropdownOpen, setDropdownOpen] = useState(false);
+  const [$dropdownOpenMember, setDropdownOpenMember] = useState(false);
 
   useEffect(() => {
    console.log('hmm')
@@ -131,7 +133,17 @@ export const NavigationBar = () => {
                 <NavLink to="/dashboard">Dashboard</NavLink>
               </li>
               <li>
-                <NavLink to="/memberregister">Members</NavLink>
+                <span 
+                  onClick={() => setDropdownOpenMember(!$dropdownOpenMember)} 
+                  style={{ cursor: 'pointer', color: '#9ca3af' }}
+                >
+                  Members
+                </span>
+                <DropdownWrapper $isOpen={$dropdownOpenMember} onMouseLeave={() => setDropdownOpenMember(false)}>                  
+                  <DropdownLink to="/member/listmembers">Member List</DropdownLink>
+                  <DropdownLink to="/memberprofile">Member Profile</DropdownLink>
+                  <DropdownLink to="/memberregister">Member Registration</DropdownLink>
+                </DropdownWrapper>
               </li>
               <li>
                 <span 
@@ -146,6 +158,7 @@ export const NavigationBar = () => {
                   <DropdownLink to="/users">Create User</DropdownLink>
                 </DropdownWrapper>
               </li>
+
               <li>
                 <NavLink to="/events">Events</NavLink>
               </li>

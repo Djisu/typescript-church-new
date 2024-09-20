@@ -1,0 +1,55 @@
+# .github/workflows/ci-cd-frontend.yml
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test
+
+      - name: Build application
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Deploy to Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # Set this in your GitHub secrets
+        run: |
+          curl -X POST "https://api.render.com/v1/services/srv-your-frontend-service-id/deploys" \
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"branch":"main"}'

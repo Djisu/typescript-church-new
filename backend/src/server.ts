@@ -11,7 +11,7 @@ import colors from 'colors';
 import { ConnectOptions } from 'mongoose';
 import path  from 'path';
 
-mongoose.set('strictQuery', true);
+mongoose.set('strictQuery', false);
 
 // Load environment variables from .env file
 dotenv.config();
@@ -98,7 +98,7 @@ const connectDB = async () => {
 const port = process.env.PORT || 3000;
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);
-  await connectDB(); // Connect to MongoDB here
+  //await connectDB(); // Connect to MongoDB here
 });
 
 // Handle process signals
