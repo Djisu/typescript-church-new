@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { logout } from '../../features/auth/authSlice';
 import { useAppDispatch } from '../../app/hooks';
 import '../../features/auth/Login.css'
-import './Landing.css'
+import './landing.css'
 
 
 interface IProps {
