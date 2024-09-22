@@ -47,9 +47,9 @@ jobs:
 
       - name: Deploy to Render
         env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # Set this in your GitHub secrets
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY_FRONTEND }}  # Set this in your GitHub secrets
         run: |
-          curl -X POST "https://api.render.com/v1/services/srv-your-frontend-service-id/deploys" \
+          curl -X POST "https://api.render.com/v1/services/srv-crmurb5ds78s73fp5sn0/deploys" \
           -H "Authorization: Bearer $RENDER_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{"branch":"main"}'
