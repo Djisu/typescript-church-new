@@ -1,0 +1,15 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "src/server.ts",
+        "src/routes/api/Members.ts",
+        "src/routes/api/Events.ts",
+        "src/routes/api/Users.ts",
+        "src/routes/api/Auth.ts"
+      ],// Adjust to your entry point
+    "out": "docs",
+    "exclude": ["**/*.spec.ts"],
+    "includeVersion": true,
+    "theme": "default",
+    "tsconfig": "tsconfig.json"
+  }

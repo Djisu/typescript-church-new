@@ -1,0 +1,638 @@
+import express, { Request, Response } from 'express';
+import { Member, IMember } from '../../../models/Members';
+import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
+
+const frontendUrl = process.env.FRONTEND_URL; // Access the environment variable
+const emailPassword = process.env.EMAIL_PASS
+const appPassword = process.env.APP_PASSWORD
+const emailUser = process.env.EMAIL_USER
+
+
+
+const router = express.Router();
+
+const transport = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: emailUser,
+      pass: appPassword  //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD'
+    }
+  });
+
+// const transport = nodemailer.createTransport({
+//     host: "sandbox.smtp.mailtrap.io",
+//     port: 2525,
+//     auth: {
+//         user: "a601af2b4b131b",
+//         pass: "e260293c2a30e8"
+//     }
+// });
+
+/**
+ * @summary Create a new member and send verification email.
+ * @route POST /members
+ * @param {Object} req.body - The member data.
+ * @param {string} req.body.firstName - The first name of the member.
+ * @param {string} req.body.lastName - The last name of the member.
+ * @param {string} req.body.email - The email address of the member.
+ * @param {string} req.body.password - The password for the member.
+ * @param {string} req.body.username - The username of the member.
+ * @returns {Object} 201 - The created member object.
+ * @returns {Error} 400 - User already exists or validation errors.
+ */
+router.post('/', async (req: Request, res: Response) => {
+    console.log('in member router.post');
+    console.log('Incoming request body:', req.body);
+
+    try {
+        let { firstName, lastName, email, password, username } = req.body;
+
+        // Check if the user already exists
+        const existingUser = await Member.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        // Create a verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+
+        // Hash the password before saving
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create initial member data
+        const initialMemberData = {
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            username,
+            status: req.body.status || 'pending approval',
+            joinedDate: req.body.joinedDate || new Date(),
+            verificationToken,
+            affiliated: req.body.affiliated || null,
+            membership_type: req.body.membership_type || null,
+            phone: req.body.phone || null,
+            address: req.body.address || null,
+        };
+
+        // Create and save the new member
+        const newMember = new Member(initialMemberData);
+        await newMember.save();
+
+        // Send verification email
+        const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
+
+        const mailOptions: SendMailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@example.com',
+            to: email,
+            subject: 'Email Verification',
+            text: `Please verify your email by clicking on the following link: ${verificationLink}`,
+            html: `<p>Please verify your email by clicking on the following link: <a href="${verificationLink}">${verificationLink}</a></p>`,
+        };
+
+        // Send the email
+        transport.sendMail(mailOptions, (error: Error | null, info: SentMessageInfo) => {
+            if (error) {
+                console.error('Error sending email:', error);
+                return res.status(500).json({ message: 'Error sending email' });
+            }
+            console.log('Email sent successfully:', info);
+            res.status(201).json({ message: 'User registered. Check your email for verification.' });
+        });
+
+    } catch (error: any) {
+        console.error('Error:', error);
+        res.status(400).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Get all members.
+ * @route GET /members
+ * @returns {Array<IMember>} 200 - An array of member objects.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.get('/', async (req: Request, res: Response) => {
+    try {
+        const members: IMember[] = await Member.find({});
+        res.json(members);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Get a member by ID.
+ * @route GET /members/{memberId}
+ * @param {string} memberId.path.required - The ID of the member.
+ * @returns {IMember} 200 - The member object.
+ * @returns {Error} 404 - Member not found.
+ */
+router.get('/:memberId', async (req: Request, res: Response) => {
+    try {
+        const member: IMember | null = await Member.findById(req.params.memberId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+        res.json(member);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Update a member by ID.
+ * @route PUT /members/{memberId}
+ * @param {string} memberId.path.required - The ID of the member to update.
+ * @param {Object} req.body - The updated member data.
+ * @returns {IMember} 200 - The updated member object.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.put('/:memberId', async (req: Request, res: Response) => {
+    try {
+        const member: IMember | null = await Member.findByIdAndUpdate(
+            req.params.memberId,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        res.json(member);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Delete a member by ID.
+ * @route DELETE /members/{memberId}
+ * @param {string} memberId.path.required - The ID of the member to delete.
+ * @returns {Object} 200 - Confirmation message.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.delete('/:memberId', async (req: Request, res: Response) => {
+    try {
+        const member: IMember | null = await Member.findByIdAndDelete(req.params.memberId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+        res.json({ message: 'Member deleted' });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Create attendance record for a member.
+ * @route POST /members/{memberId}/attendance
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {Object} req.body - Attendance data.
+ * @param {string} req.body.date - The date of attendance.
+ * @param {boolean} req.body.attended - Attendance status.
+ * @returns {Object} 201 - The created attendance record.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.post('/:memberId/attendance', async (req: Request, res: Response) => {
+    console.log('in router.post(/:memberId/attendance')
+    try {
+        const { memberId } = req.params;
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(memberId)) {
+          return res.status(400).json({ message: 'Invalid member ID format' });
+        }
+        const { date, attended } = req.body;
+
+        const member: IMember | null = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        member.attendanceRecord.push({ date, attended });
+        await member.save();
+
+        res.status(201).json(member.attendanceRecord[member.attendanceRecord.length - 1]);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Get attendance record for a member.
+ * @route GET /members/{memberId}/attendance
+ * @param {string} memberId.path.required - The ID of the member.
+ * @returns {Array} 200 - The attendance records for the member.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.get('/:memberId/attendance', async (req: Request, res: Response) => {
+    try {
+        const { memberId } = req.params;
+        const member: IMember | null = await Member.findById(memberId);
+
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        res.json(member.attendanceRecord);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Update attendance record for a member.
+ * @route PUT /members/{memberId}/attendance/{recordId}
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {string} recordId.path.required - The ID of the attendance record.
+ * @param {Object} req.body - Updated attendance data.
+ * @param {string} req.body.date - The updated date of attendance.
+ * @param {boolean} req.body.attended - Updated attendance status.
+ * @returns {Object} 200 - The updated attendance record.
+ * @returns {Error} 404 - Member or attendance record not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.put('/:memberId/attendance/:recordId', async (req: Request, res: Response) => {
+    try {
+        const { memberId, recordId } = req.params;
+        const { date, attended } = req.body;
+
+        const member: IMember | null = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
+        if (!record) {
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
+
+        record.date = date;
+        record.attended = attended;
+        await member.save();
+
+        res.json(record);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+/**
+ * @summary Delete attendance record for a member.
+ * @route DELETE /members/{memberId}/attendance/{recordId}
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {string} recordId.path.required - The ID of the attendance record.
+ * @returns {Object} 200 - Confirmation message.
+ * @returns {Error} 404 - Member or attendance record not found.
+ * @returns {Error} 500 - Internal server error.
+ */
+router.delete('/:memberId/attendance/:recordId', async (req: Request, res: Response) => {
+    try {
+        const { memberId, recordId } = req.params;
+
+        const member: IMember | null = await Member.findById(memberId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
+        if (recordIndex === -1) {
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
+
+        member.attendanceRecord.splice(recordIndex, 1);
+        await member.save();
+
+        res.json({ message: 'Attendance record deleted' });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Additional routes for tithes and offerings can follow the same pattern.
+// Ensure to add TSDoc comments similar to the examples above for those routes as well.
+
+// Tithe
+/**
+ * @summary Create tithe record for a member.
+ * @route POST /members/{memberId}/tithe
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {Object} req.body - tithe data.
+ * @param {string} req.body.date - The date of tithe.
+ * @param {boolean} req.body.amount - Amount quantity.
+ * @returns {Object} 201 - The created tithe record.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.post('/:memberId/tithes', async (req: Request, res: Response) => {
+  console.log('in router.post(/:memberId/tithes')
+  try {
+      const { memberId } = req.params;
+      // Validate ObjectId
+      if (!mongoose.Types.ObjectId.isValid(memberId)) {
+        return res.status(400).json({ message: 'Invalid member ID format' });
+      }
+      const { date, amount } = req.body;
+
+      const member: IMember | null = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      member.tithes.push({ date, amount });
+      await member.save();
+
+      res.status(201).json(member.tithes[member.tithes.length - 1]);
+  } catch (error: any) {
+      res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+* @summary Get tithe record for a member.
+* @route GET /members/{memberId}/tithes
+* @param {string} memberId.path.required - The ID of the member.
+* @returns {Array} 200 - The tithes records for the member.
+* @returns {Error} 404 - Member not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.get('/:memberId/tithes', async (req: Request, res: Response) => {
+  try {
+      const { memberId } = req.params;
+      const member: IMember | null = await Member.findById(memberId);
+
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      res.json(member.tithes);
+  } catch (error: any) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+* @summary Update tithe record for a member.
+* @route PUT /members/{memberId}/tithes/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the tithe record.
+* @param {Object} req.body - Updated tithe data.
+* @param {string} req.body.date - The updated date of tithe.
+* @param {boolean} req.body.tithes - Updated tithe status.
+* @returns {Object} 200 - The updated tithe record.
+* @returns {Error} 404 - Member or tithe record not found.
+* @returns {Error} 400 - Validation error.
+*/
+router.put('/:memberId/tithes/:recordId', async (req: Request, res: Response) => {
+  try {
+      const { memberId, recordId } = req.params;
+      const { date, amount } = req.body;
+
+      const member: IMember | null = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      const record = member.tithes.find(r => r.date.getTime() === Number(recordId));
+      if (!record) {
+          return res.status(404).json({ message: 'Attendance record not found' });
+      }
+
+      record.date = date;
+      record.amount = amount;
+      await member.save();
+
+      res.json(record);
+  } catch (error: any) {
+      res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+* @summary Delete tithes record for a member.
+* @route DELETE /members/{memberId}/tithes/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the tithes record.
+* @returns {Object} 200 - Confirmation message.
+* @returns {Error} 404 - Member or tithe record not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.delete('/:memberId/tithes/:recordId', async (req: Request, res: Response) => {
+  try {
+      const { memberId, recordId } = req.params;
+
+      const member: IMember | null = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      const recordIndex = member.tithes.findIndex(r => r.date.getTime() === Number(recordId));
+      if (recordIndex === -1) {
+          return res.status(404).json({ message: 'Tithe record not found' });
+      }
+
+      member.tithes.splice(recordIndex, 1);
+      await member.save();
+
+      res.json({ message: 'Tithe record deleted' });
+  } catch (error: any) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+// Offerings
+/**
+ * @summary Create offering record for a member.
+ * @route POST /members/{memberId}/offering
+ * @param {string} memberId.path.required - The ID of the member.
+ * @param {Object} req.body - offering data.
+ * @param {string} req.body.date - The date of offering.
+ * @param {boolean} req.body.amount - Amount quantity.
+ * @returns {Object} 201 - The created offering record.
+ * @returns {Error} 404 - Member not found.
+ * @returns {Error} 400 - Validation error.
+ */
+router.post('/:memberId/offerings', async (req: Request, res: Response) => {
+  console.log('in router.post(/:memberId/offerings')
+  try {
+      const { memberId } = req.params;
+      // Validate ObjectId
+      if (!mongoose.Types.ObjectId.isValid(memberId)) {
+        return res.status(400).json({ message: 'Invalid member ID format' });
+      }
+      const { date, amount } = req.body;
+
+      const member: IMember | null = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      member.offerings.push({ date, amount });
+      await member.save();
+
+      res.status(201).json(member.tithes[member.offerings.length - 1]);
+  } catch (error: any) {
+      res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+* @summary Get offerings record for a member.
+* @route GET /members/{memberId}/offerings
+* @param {string} memberId.path.required - The ID of the member.
+* @returns {Array} 200 - The offerings records for the member.
+* @returns {Error} 404 - Member not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.get('/:memberId/offerings', async (req: Request, res: Response) => {
+  try {
+      const { memberId } = req.params;
+      const member: IMember | null = await Member.findById(memberId);
+
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      res.json(member.offerings);
+  } catch (error: any) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+* @summary Update offerings record for a member.
+* @route PUT /members/{memberId}/offerings/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the offerings record.
+* @param {Object} req.body - Updated offerings data.
+* @param {string} req.body.date - The updated date of offerings.
+* @param {boolean} req.body.attended - Updated offerings status.
+* @returns {Object} 200 - The updated offerings record.
+* @returns {Error} 404 - Member or offerings record not found.
+* @returns {Error} 400 - Validation error.
+*/
+router.put('/:memberId/offerings/:recordId', async (req: Request, res: Response) => {
+  try {
+      const { memberId, recordId } = req.params;
+      const { date, amount } = req.body;
+
+      const member: IMember | null = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      const record = member.offerings.find(r => r.date.getTime() === Number(recordId));
+      if (!record) {
+          return res.status(404).json({ message: 'Offering record not found' });
+      }
+
+      record.date = date;
+      record.amount = amount;
+      await member.save();
+
+      res.json(record);
+  } catch (error: any) {
+      res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+* @summary Delete offerings record for a member.
+* @route DELETE /members/{memberId}/offerings/{recordId}
+* @param {string} memberId.path.required - The ID of the member.
+* @param {string} recordId.path.required - The ID of the offerings record.
+* @returns {Object} 200 - Confirmation message.
+* @returns {Error} 404 - Member or offerings record not found.
+* @returns {Error} 500 - Internal server error.
+*/
+router.delete('/:memberId/offerings/:recordId', async (req: Request, res: Response) => {
+  try {
+      const { memberId, recordId } = req.params;
+
+      const member: IMember | null = await Member.findById(memberId);
+      if (!member) {
+          return res.status(404).json({ message: 'Member not found' });
+      }
+
+      const recordIndex = member.offerings.findIndex(r => r.date.getTime() === Number(recordId));
+      if (recordIndex === -1) {
+          return res.status(404).json({ message: 'Offerings record not found' });
+      }
+
+      member.offerings.splice(recordIndex, 1);
+      await member.save();
+
+      res.json({ message: 'Offering record deleted' });
+  } catch (error: any) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+export default router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
