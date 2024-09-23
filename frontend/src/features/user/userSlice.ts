@@ -24,11 +24,16 @@ const initialState: UserState = {
   error: null,
 };
 
+// Determine the base URL based on the environment
+const BASE_URL: string = process.env.NODE_ENV === 'production'
+  ? 'https://church-management-backend.onrender.com'
+  : 'http://localhost:3000';
+
 // Async thunk for user registration
 export const registerUser = createAsyncThunk<IUser, FormData>(
   'user/register',
   async (formData) => {
-    const response = await axios.post('http://localhost:3000/api/users', formData, {
+    const response = await axios.post(`${BASE_URL}/api/users`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -46,7 +51,7 @@ export const updateUserProfile = createAsyncThunk<IUser, Partial<Omit<IUser, '_i
       throw new Error('User not found');
     }
 
-    const response = await axios.patch(`http://localhost:3000/api/users/${users[0]._id}`, userData);
+    const response = await axios.patch(`${BASE_URL}/api/users/${users[0]._id}`, userData);
     return response.data;
   }
 );
@@ -55,7 +60,7 @@ export const updateUserProfile = createAsyncThunk<IUser, Partial<Omit<IUser, '_i
 export const findAllUsers = createAsyncThunk<IUser[]>(
   'user/findAllUsers',
   async () => {
-    const response = await axios.get('http://localhost:3000/api/users');
+    const response = await axios.get(`${BASE_URL}/api/users`);
     return response.data;
   }
 );
@@ -68,7 +73,7 @@ export const findUser = createAsyncThunk<IUser, string | null>(
       throw new Error('User ID is required');
     }
 
-    const response = await axios.get(`http://localhost:3000/api/users/${userId}`);
+    const response = await axios.get(`${BASE_URL}/api/users/${userId}`);
     return response.data;
   }
 );
