@@ -25,9 +25,13 @@ const initialState: UserState = {
 };
 
 // Determine the base URL based on the environment
-const BASE_URL: string = process.env.NODE_ENV === 'production'
-  ? 'https://church-management-backend.onrender.com'
-  : 'http://localhost:3000';
+// const BASE_URL: string = process.env.NODE_ENV === 'production'
+//   ? 'https://church-management-backend.onrender.com'
+//   : 'http://localhost:3000';
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+
+console.log('process.env.NODE_ENV: ', process.env.NODE_ENV)
 
 // Async thunk for user registration
 export const registerUser = createAsyncThunk<IUser, FormData>(
