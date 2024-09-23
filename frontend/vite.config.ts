@@ -6,4 +6,7 @@ export default defineConfig({
   server: {
     open: true, // Automatically open the browser
   },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+  },
 });
