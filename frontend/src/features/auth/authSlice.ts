@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 //import { useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import { RootState } from '../../app/store';
@@ -115,7 +115,7 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action) => {
+    setUser: (state, action: PayloadAction<AuthState['user']>) => {
       state.user = action.payload;
     },
   },
@@ -124,7 +124,7 @@ export const authSlice = createSlice({
       .addCase(login.pending, (state) => {
         state.loading = 'pending';
       })
-      .addCase(login.fulfilled, (state, action) => {
+      .addCase(login.fulfilled, (state, action: PayloadAction<any>) => {
         state.loading = 'succeeded';
         const [encryptedId, username, userEmail, role, avatar] = detokenize(action.payload.token);
 

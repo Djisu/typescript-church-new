@@ -1,68 +1,64 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import mongoose from 'mongoose';
 
 export interface IEvent {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   title: string;
   description: string;
   startDate: Date;
   endDate: Date;
   location: string;
-  registrations: { memberId: mongoose.Types.ObjectId; registeredAt: Date }[];
+  registrations: { memberId: string; registeredAt: Date }[];
   createdAt: Date;
   updatedAt: Date;
 }
 
 // thunkActions
-export const createEvent = createAsyncThunk(
+export const createEvent = createAsyncThunk<IEvent, Omit<IEvent, '_id' | 'createdAt' | 'updatedAt'>, { rejectValue: string }>(
   'events/createEvent',
-  async (newEvent: Omit<IEvent, '_id' | 'createdAt' | 'updatedAt'>, thunkAPI) => {
+  async (newEvent, { rejectWithValue }) => {
     try {
       const response = await axios.post<IEvent>('/api/events', newEvent);
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return rejectWithValue(error.response.data);
     }
   }
 );
 
-export const updateEvent = createAsyncThunk(
+export const updateEvent = createAsyncThunk<IEvent, Partial<Omit<IEvent, 'createdAt' | 'updatedAt'>>, { rejectValue: string }>(
   'events/updateEvent',
-  async (updatedEvent: Partial<Omit<IEvent, 'createdAt' | 'updatedAt'>>, thunkAPI) => {
+  async (updatedEvent, { rejectWithValue }) => {
     try {
       const { _id, ...rest } = updatedEvent;
       const response = await axios.put<IEvent>(`/api/events/${_id}`, rest);
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return rejectWithValue(error.response.data);
     }
   }
 );
 
-export const deleteEvent = createAsyncThunk(
+export const deleteEvent = createAsyncThunk<string, string, { rejectValue: string }>(
   'events/deleteEvent',
-  async (eventId: string, thunkAPI) => {
+  async (eventId, { rejectWithValue }) => {
     try {
       await axios.delete(`/api/events/${eventId}`);
       return eventId;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return rejectWithValue(error.response.data);
     }
   }
 );
 
-export const searchEvents = createAsyncThunk(
+export const searchEvents = createAsyncThunk<IEvent[], Partial<IEvent>, { rejectValue: string }>(
   'events/searchEvents',
-  async (searchParams: Partial<IEvent>, thunkAPI) => {
+  async (searchParams, { rejectWithValue }) => {
     try {
-      const response = await axios.get<IEvent[]>('/api/events', {
-        params: searchParams,
-      });
+      const response = await axios.get<IEvent[]>('/api/events', { params: searchParams });
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return rejectWithValue(error.response.data);
     }
   }
 );
@@ -95,9 +91,9 @@ const eventSlice = createSlice({
         state.loading = false;
         state.events.push(action.payload);
       })
-      .addCase(createEvent.rejected, (state, action) => {
+      .addCase(createEvent.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Error creating event";
       })
       .addCase(updateEvent.pending, (state) => {
         state.loading = true;
@@ -105,14 +101,14 @@ const eventSlice = createSlice({
       })
       .addCase(updateEvent.fulfilled, (state, action: PayloadAction<IEvent>) => {
         state.loading = false;
-        const index = state.events.findIndex((event) => event._id.toString() === action.payload._id.toString());
+        const index = state.events.findIndex((event) => event._id === action.payload._id);
         if (index !== -1) {
           state.events[index] = action.payload;
         }
       })
-      .addCase(updateEvent.rejected, (state, action) => {
+      .addCase(updateEvent.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Error updating event";
       })
       .addCase(deleteEvent.pending, (state) => {
         state.loading = true;
@@ -120,11 +116,11 @@ const eventSlice = createSlice({
       })
       .addCase(deleteEvent.fulfilled, (state, action: PayloadAction<string>) => {
         state.loading = false;
-        state.events = state.events.filter((event) => event._id.toString() !== action.payload);
+        state.events = state.events.filter((event) => event._id !== action.payload);
       })
-      .addCase(deleteEvent.rejected, (state, action) => {
+      .addCase(deleteEvent.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Error deleting event";
       })
       .addCase(searchEvents.pending, (state) => {
         state.loading = true;
@@ -134,9 +130,9 @@ const eventSlice = createSlice({
         state.loading = false;
         state.events = action.payload;
       })
-      .addCase(searchEvents.rejected, (state, action) => {
+      .addCase(searchEvents.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Error searching events";
       });
   },
 });
