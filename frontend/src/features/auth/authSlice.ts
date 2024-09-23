@@ -44,6 +44,10 @@ const initialState: AuthState = {
   error: null,
 };
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+
+console.log('process.env.NODE_ENV: ', process.env.NODE_ENV)
+
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }) => {
@@ -51,7 +55,7 @@ export const login = createAsyncThunk(
     console.log('in auth/login', credentials)
 
     //const response = await axios.post('/api/auth', credentials);
-    const response = await axios.post('http://localhost:3000/api/auth', credentials);
+    const response = await axios.post(`${BASE_URL}/api/auth`, credentials);
 
     //console.log('response.data: ', response.data)
 
@@ -88,7 +92,7 @@ export const requestPasswordReset = createAsyncThunk<RequestPasswordResponse, st
 
     try {
       //const response = await axios.post('http://localhost:3000/api/auth', credentials);
-      await axios.post('http://localhost:3000/api/auth/request-password-reset', { email });
+      await axios.post(`${BASE_URL}/api/auth/request-password-reset`, { email });
 
       return { message: 'Password reset email sent.' };
     } catch (error: any) {
@@ -103,7 +107,7 @@ export const resetPassword = createAsyncThunk<ResetPasswordResponse, { token: st
   async ({ token, newPassword }, { rejectWithValue }) => {
     console.log('in auth/resetPassword')
     try {
-      await axios.post('http://localhost:3000/api/auth/reset-password', { token, newPassword });
+      await axios.post(`${BASE_URL}/api/auth/reset-password`, { token, newPassword });
       return { message: 'Password has been reset successfully.' };
     } catch (error: any) {
       return rejectWithValue({ message: error.response?.data?.message || 'An error occurred.' });
