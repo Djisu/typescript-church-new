@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTextMessage = void 0;
+exports.sendTextMessage = sendTextMessage;
 const axios_1 = __importDefault(require("axios"));
 const HUBTEL_API_KEY = 'your_hubtel_api_key';
 const HUBTEL_API_SECRET = 'your_hubtel_api_secret';
@@ -39,5 +39,4 @@ function sendTextMessage(phoneNumber, message) {
         }
     });
 }
-exports.sendTextMessage = sendTextMessage;
 //# sourceMappingURL=textMessaging.js.map
