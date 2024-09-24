@@ -20,8 +20,16 @@ console.log('MongoDB URI:', process.env.MONGODB_URI);
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+const allowedOrigins = ['https://church-management-frontend.onrender.com'];
+
 // Middleware configuration
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true // If you need to send cookies or authentication headers
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -52,6 +60,8 @@ const connectDB = async () => {
 
     console.log('Connecting to MongoDB with URI:', dbURI);
     try {
+        mongoose.disconnect()
+
         await mongoose.connect(dbURI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,

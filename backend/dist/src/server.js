@@ -52,8 +52,14 @@ console.log('App Password:', process.env.APP_PASSWORD);
 console.log('MongoDB URI:', process.env.MONGODB_URI);
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
+const allowedOrigins = ['https://church-management-frontend.onrender.com'];
 // Middleware configuration
-app.use((0, cors_1.default)());
+// app.use(cors());
+app.use((0, cors_1.default)({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true // If you need to send cookies or authentication headers
+}));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // Define storage configuration for multer
@@ -78,6 +84,7 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     console.log('Connecting to MongoDB with URI:', dbURI);
     try {
+        mongoose_1.default.disconnect();
         yield mongoose_1.default.connect(dbURI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
