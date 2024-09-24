@@ -33,7 +33,7 @@ const storage = diskStorage({
 const upload = multer({ storage });
 
 // Seed the users table
-router.post('/seed', async (req, res) => {
+router.post('/seed', async (req: Request, res: Response) => {
    // console.log('Received /seed request')
 
     // try {

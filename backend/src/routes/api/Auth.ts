@@ -73,7 +73,7 @@ router.post('/', [
 });
 
 // Reset password
-router.post('/request-password-reset', async (req, res) => {
+router.post('/request-password-reset', async (req: Request, res: Response) => {
     console.log('in backend /request-password-reset')
 
     const { email } = req.body;
@@ -96,7 +96,7 @@ router.post('/request-password-reset', async (req, res) => {
   });
 
 // Password reset
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', async (req: Request, res: Response) => {
     const { token, newPassword } = req.body;
   
     const user = await User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
