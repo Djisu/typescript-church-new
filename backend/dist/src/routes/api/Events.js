@@ -53,9 +53,11 @@ router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const event = yield Events_1.Event.findById(req.params.id);
         if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
+            res.status(404).json({ message: 'Event not found' });
         }
-        res.json(event);
+        if (event) {
+            res.json(event);
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -86,9 +88,11 @@ router.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const event = yield Events_1.Event.findByIdAndDelete(req.params.id);
         if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
+            res.status(404).json({ message: 'Event not found' });
         }
-        res.json({ message: 'Event deleted' });
+        if (event) {
+            res.json({ message: 'Event deleted' });
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -99,17 +103,19 @@ router.post('/:id/send-message', (req, res) => __awaiter(void 0, void 0, void 0,
     try {
         const event = yield Events_1.Event.findById(req.params.id);
         if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
+            res.status(404).json({ message: 'Event not found' });
         }
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ message: 'Message is required' });
+        if (event) {
+            const { message } = req.body;
+            if (!message) {
+                res.status(400).json({ message: 'Message is required' });
+            }
+            // Get the phone numbers of the registered members
+            const phoneNumbers = event.registrations.map(reg => reg.memberId.toString());
+            // Send text messages to the registered members
+            yield Promise.all(phoneNumbers.map(phoneNumber => (0, textMessaging_1.sendTextMessage)(phoneNumber, message)));
+            res.json({ message: 'Text messages sent successfully' });
         }
-        // Get the phone numbers of the registered members
-        const phoneNumbers = event.registrations.map(reg => reg.memberId.toString());
-        // Send text messages to the registered members
-        yield Promise.all(phoneNumbers.map(phoneNumber => (0, textMessaging_1.sendTextMessage)(phoneNumber, message)));
-        res.json({ message: 'Text messages sent successfully' });
     }
     catch (error) {
         res.status(500).json({ message: error.message });

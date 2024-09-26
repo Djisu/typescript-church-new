@@ -1,8 +1,11 @@
 import express from 'express';
 import { Request, Response } from 'express';
-//import { check, validationResult } from 'express-validator';
-import { check, validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
+
+import expressValidator from 'express-validator';
+const { check, validationResult } = expressValidator;
+
+import * as jwt from 'jsonwebtoken';
+
 import config from '../../utils/config';
 import { User, IUser } from '../../../models/Users.js';
 
@@ -18,14 +21,14 @@ const router = express.Router();
 router.post('/', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response):  Promise<void> => {
 
     console.log('Route hit backend');
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        res.status(400).json({ errors: errors.array() });
     }
 
     const { email, password } = req.body;
@@ -36,38 +39,33 @@ router.post('/', [
         const user: IUser | null = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
         }
+        if (user) {
+            const isMatch = await user.comparePassword(password);
 
-        const isMatch = await user.comparePassword(password);
-
-        if (!isMatch) {
-            return res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-        }
-
-        const payload = {
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role,
-                avatar: user.avatar
+            if (!isMatch) {
+                res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
             }
-        };
 
-        //console.log('payload: ', payload)config.jwtSecret,
+            const payload = {
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                    avatar: user.avatar
+                }
+            };
 
-        const token = jwt.sign(
-            payload,
-            config.jwtSecret as jwt.Secret,
-            { expiresIn: 360000 }, 
-
-            // (err, token) => {
-            //     if (err) throw err;                         
-            // }
-        );
-        //console.log('tokenx: ', token)
-        res.json({token, user}) 
+            const token = jwt.sign(
+                payload,
+                config.jwtSecret as string,
+                { expiresIn: 360000 }, 
+            );
+            //console.log('tokenx: ', token)
+            res.json({token, user}) 
+        }
     } catch (err) {
         console.error('Error in /api/auth route:', err);
         res.status(500).json({ error: 'Internal server error' });
@@ -83,46 +81,49 @@ router.post('/request-password-reset', async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
   
     if (!user) {
-      return res.status(404).json({ message: 'Email not found.' });
+       res.status(404).json({ message: 'Email not found.' });
     }
   
     const token = crypto.randomBytes(32).toString('hex'); // Generate token
-    user.resetToken = token; // Save token to user record
-    user.resetTokenExpiration = new Date(Date.now() + 3600000); // 1 hour expiration
-    await user.save();
 
-    console.log('after user token reset')
-  
-    await sendResetEmail(email, token); // Function to send email
-     res.status(200).json({ message: 'Password reset email sent.' });
+    if (user){
+        user.resetToken = token; // Save token to user record
+        user.resetTokenExpiration = new Date(Date.now() + 3600000); // 1 hour expiration
+        await user.save();
+
+        console.log('after user token reset')
+    
+        await sendResetEmail(email, token); // Function to send email
+        res.status(200).json({ message: 'Password reset email sent.' });
+   }
   });
 
 // Password reset
-router.post('/reset-password', async (req: Request, res: Response) => {
+router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
     const { token, newPassword } = req.body;
   
     const user = await User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
   
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token.' });
+      res.status(400).json({ message: 'Invalid or expired token.' });
     }
   
     // Validate new password (e.g., length, complexity)
     if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+       res.status(400).json({ message: 'Password must be at least 6 characters long.' });
     }
   
     // Hash the password
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
 
+    if (user){
+        user.password = await bcrypt.hash(newPassword, salt);
+        user.resetToken = undefined; // Clear the token
+        user.resetTokenExpiration = undefined; // Clear expiration
 
-
-    user.resetToken = undefined; // Clear the token
-    user.resetTokenExpiration = undefined; // Clear expiration
-    await user.save();
-  
-    res.status(200).json({ message: 'Password has been reset successfully.' });
+        await user.save(); 
+        res.status(200).json({ message: 'Password has been reset successfully.' });
+    }
   });
 
 export default router;

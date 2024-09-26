@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const Members_1 = require("../../../models/Members");
+//import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
+//import  nodemailer, { createTransport, SendMailOptions, SentMessageInfo } from 'nodemailer';
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const crypto_1 = __importDefault(require("crypto"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -58,7 +60,7 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // Check if the user already exists
         const existingUser = yield Members_1.Member.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
+            res.status(400).json({ message: 'User already exists' });
         }
         // Create a verification token
         const verificationToken = crypto_1.default.randomBytes(32).toString('hex');
@@ -91,11 +93,10 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             text: `Please verify your email by clicking on the following link: ${verificationLink}`,
             html: `<p>Please verify your email by clicking on the following link: <a href="${verificationLink}">${verificationLink}</a></p>`,
         };
-        // Send the email
         transport.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Error sending email:', error);
-                return res.status(500).json({ message: 'Error sending email' });
+                res.status(500).json({ message: 'Error sending email' });
             }
             console.log('Email sent successfully:', info);
             res.status(201).json({ message: 'User registered. Check your email for verification.' });
@@ -132,7 +133,7 @@ router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const member = yield Members_1.Member.findById(req.params.memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
         res.json(member);
     }
@@ -153,7 +154,7 @@ router.put('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const member = yield Members_1.Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
         res.json(member);
     }
@@ -173,7 +174,7 @@ router.delete('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, func
     try {
         const member = yield Members_1.Member.findByIdAndDelete(req.params.memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
         res.json({ message: 'Member deleted' });
     }
@@ -198,16 +199,18 @@ router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, voi
         const { memberId } = req.params;
         // Validate ObjectId
         if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
-            return res.status(400).json({ message: 'Invalid member ID format' });
+            res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, attended } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        member.attendanceRecord.push({ date, attended });
-        yield member.save();
-        res.status(201).json(member.attendanceRecord[member.attendanceRecord.length - 1]);
+        if (member) {
+            member.attendanceRecord.push({ date, attended });
+            yield member.save();
+            res.status(201).json(member.attendanceRecord[member.attendanceRecord.length - 1]);
+        }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -226,9 +229,11 @@ router.get('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void
         const { memberId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        res.json(member.attendanceRecord);
+        if (member) {
+            res.json(member.attendanceRecord);
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -252,16 +257,20 @@ router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, vo
         const { date, attended } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (!record) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+        if (member) {
+            const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
+            if (!record) {
+                res.status(404).json({ message: 'Attendance record not found' });
+            }
+            if (record) {
+                record.date = date;
+                record.attended = attended;
+            }
+            yield member.save();
+            res.json(record);
         }
-        record.date = date;
-        record.attended = attended;
-        yield member.save();
-        res.json(record);
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -281,15 +290,17 @@ router.delete('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0,
         const { memberId, recordId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex === -1) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+        if (member) {
+            const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
+            if (recordIndex === -1) {
+                res.status(404).json({ message: 'Attendance record not found' });
+            }
+            member.attendanceRecord.splice(recordIndex, 1);
+            yield member.save();
+            res.json({ message: 'Attendance record deleted' });
         }
-        member.attendanceRecord.splice(recordIndex, 1);
-        yield member.save();
-        res.json({ message: 'Attendance record deleted' });
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -315,16 +326,18 @@ router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0,
         const { memberId } = req.params;
         // Validate ObjectId
         if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
-            return res.status(400).json({ message: 'Invalid member ID format' });
+            res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, amount } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        member.tithes.push({ date, amount });
-        yield member.save();
-        res.status(201).json(member.tithes[member.tithes.length - 1]);
+        if (member) {
+            member.tithes.push({ date, amount });
+            yield member.save();
+            res.status(201).json(member.tithes[member.tithes.length - 1]);
+        }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -343,9 +356,11 @@ router.get('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, 
         const { memberId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        res.json(member.tithes);
+        if (member) {
+            res.json(member.tithes);
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -369,16 +384,20 @@ router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0
         const { date, amount } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        const record = member.tithes.find(r => r.date.getTime() === Number(recordId));
-        if (!record) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+        if (member) {
+            const record = member.tithes.find(r => r.date.getTime() === Number(recordId));
+            if (!record) {
+                res.status(404).json({ message: 'Attendance record not found' });
+            }
+            if (record) {
+                record.date = date;
+                record.amount = amount;
+                yield member.save();
+                res.json(record);
+            }
         }
-        record.date = date;
-        record.amount = amount;
-        yield member.save();
-        res.json(record);
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -398,15 +417,17 @@ router.delete('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, voi
         const { memberId, recordId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        const recordIndex = member.tithes.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex === -1) {
-            return res.status(404).json({ message: 'Tithe record not found' });
+        if (member) {
+            const recordIndex = member.tithes.findIndex(r => r.date.getTime() === Number(recordId));
+            if (recordIndex === -1) {
+                res.status(404).json({ message: 'Tithe record not found' });
+            }
+            member.tithes.splice(recordIndex, 1);
+            yield member.save();
+            res.json({ message: 'Tithe record deleted' });
         }
-        member.tithes.splice(recordIndex, 1);
-        yield member.save();
-        res.json({ message: 'Tithe record deleted' });
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -430,16 +451,18 @@ router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void
         const { memberId } = req.params;
         // Validate ObjectId
         if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
-            return res.status(400).json({ message: 'Invalid member ID format' });
+            res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, amount } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        member.offerings.push({ date, amount });
-        yield member.save();
-        res.status(201).json(member.tithes[member.offerings.length - 1]);
+        if (member) {
+            member.offerings.push({ date, amount });
+            yield member.save();
+            res.status(201).json(member.tithes[member.offerings.length - 1]);
+        }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -458,9 +481,11 @@ router.get('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 
         const { memberId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        res.json(member.offerings);
+        if (member) {
+            res.json(member.offerings);
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -484,16 +509,20 @@ router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, voi
         const { date, amount } = req.body;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        const record = member.offerings.find(r => r.date.getTime() === Number(recordId));
-        if (!record) {
-            return res.status(404).json({ message: 'Offering record not found' });
+        if (member) {
+            const record = member.offerings.find(r => r.date.getTime() === Number(recordId));
+            if (!record) {
+                res.status(404).json({ message: 'Offering record not found' });
+            }
+            if (record) {
+                record.date = date;
+                record.amount = amount;
+                yield member.save();
+                res.json(record);
+            }
         }
-        record.date = date;
-        record.amount = amount;
-        yield member.save();
-        res.json(record);
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -513,15 +542,17 @@ router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, 
         const { memberId, recordId } = req.params;
         const member = yield Members_1.Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+            res.status(404).json({ message: 'Member not found' });
         }
-        const recordIndex = member.offerings.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex === -1) {
-            return res.status(404).json({ message: 'Offerings record not found' });
+        if (member) {
+            const recordIndex = member.offerings.findIndex(r => r.date.getTime() === Number(recordId));
+            if (recordIndex === -1) {
+                res.status(404).json({ message: 'Offerings record not found' });
+            }
+            member.offerings.splice(recordIndex, 1);
+            yield member.save();
+            res.json({ message: 'Offering record deleted' });
         }
-        member.offerings.splice(recordIndex, 1);
-        yield member.save();
-        res.json({ message: 'Offering record deleted' });
     }
     catch (error) {
         res.status(500).json({ message: error.message });

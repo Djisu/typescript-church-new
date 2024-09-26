@@ -55,7 +55,7 @@ router.post('/seed', async (req: Request, res: Response) => {
   });
 
 // Create a new user
-router.post('/', upload.single('avatar'), async (req: Request, res: Response) => {
+router.post('/', upload.single('avatar'), async (req: Request, res: Response): Promise<void> => {
   
   console.log('Hit /register');
 
@@ -70,7 +70,7 @@ router.post('/', upload.single('avatar'), async (req: Request, res: Response) =>
     // Check if user exists
     let user = await User.findOne({ email: email });
     if (user) {
-      return res.status(400).json({ errors: [{ msg: 'User already exists' }] });
+       res.status(400).json({ errors: [{ msg: 'User already exists' }] });
     }
 
     // Hash the password
@@ -83,7 +83,7 @@ router.post('/', upload.single('avatar'), async (req: Request, res: Response) =>
     res.status(201).json(user);
   } catch (err: any) {
     console.error('Error processing file upload:', err); // Log the error
-    return res.status(500).json({ message: 'An error occurred during registration', error: err.message });
+     res.status(500).json({ message: 'An error occurred during registration', error: err.message });
   }
 });
 
@@ -108,7 +108,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Get a specific user
-router.get('/:userId', async (req: Request, res: Response) => {
+router.get('/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
 
@@ -116,18 +116,19 @@ router.get('/:userId', async (req: Request, res: Response) => {
      console.log('in router.get(/:userId): ' + req.params.userId)
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+       res.status(404).json({ message: 'User not found' });
     }
     console.log('user: ', user)
-
-    res.json(user);
+    if (user) {
+      res.json(user);
+    }  
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 });
 
 // Update a user
-router.put('/users/:userId', async (req: Request, res: Response) => {
+router.put('/users/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password, role, avatar } = req.body;
 
@@ -138,25 +139,27 @@ router.put('/users/:userId', async (req: Request, res: Response) => {
     );
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+       res.status(404).json({ message: 'User not found' });
     }
-
-    res.json(user);
+    if (user) {
+      res.json(user);
+    }  
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
 });
 
 // Delete a user
-router.delete('/users/:userId', async (req: Request, res: Response) => {
+router.delete('/users/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     const user: IUser | null = await User.findByIdAndDelete(req.params.userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+       res.status(404).json({ message: 'User not found' });
     }
-
-    res.json({ message: 'User deleted' });
+    if (user) {
+      res.json({ message: 'User deleted' });
+    }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

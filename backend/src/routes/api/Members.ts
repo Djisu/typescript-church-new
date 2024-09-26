@@ -1,6 +1,9 @@
 import express, { Request, Response } from 'express';
 import { Member, IMember } from '../../../models/Members';
+//import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
+//import  nodemailer, { createTransport, SendMailOptions, SentMessageInfo } from 'nodemailer';
 import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
+
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
@@ -43,7 +46,7 @@ const transport = nodemailer.createTransport({
  * @returns {Object} 201 - The created member object.
  * @returns {Error} 400 - User already exists or validation errors.
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
     console.log('in member router.post');
     console.log('Incoming request body:', req.body);
 
@@ -53,7 +56,7 @@ router.post('/', async (req: Request, res: Response) => {
         // Check if the user already exists
         const existingUser = await Member.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
+             res.status(400).json({ message: 'User already exists' });
         }
 
         // Create a verification token
@@ -85,6 +88,8 @@ router.post('/', async (req: Request, res: Response) => {
         // Send verification email
         const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
 
+
+        type SendMailOptions = any;
         const mailOptions: SendMailOptions = {
             from: process.env.EMAIL_USER || 'no-reply@example.com',
             to: email,
@@ -94,10 +99,11 @@ router.post('/', async (req: Request, res: Response) => {
         };
 
         // Send the email
+        type SentMessageInfo = any
         transport.sendMail(mailOptions, (error: Error | null, info: SentMessageInfo) => {
             if (error) {
                 console.error('Error sending email:', error);
-                return res.status(500).json({ message: 'Error sending email' });
+                res.status(500).json({ message: 'Error sending email' });
             }
             console.log('Email sent successfully:', info);
             res.status(201).json({ message: 'User registered. Check your email for verification.' });
@@ -131,11 +137,11 @@ router.get('/', async (req: Request, res: Response) => {
  * @returns {IMember} 200 - The member object.
  * @returns {Error} 404 - Member not found.
  */
-router.get('/:memberId', async (req: Request, res: Response) => {
+router.get('/:memberId', async (req: Request, res: Response): Promise<void> => {
     try {
         const member: IMember | null = await Member.findById(req.params.memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
         res.json(member);
     } catch (error: any) {
@@ -152,7 +158,7 @@ router.get('/:memberId', async (req: Request, res: Response) => {
  * @returns {Error} 404 - Member not found.
  * @returns {Error} 400 - Validation error.
  */
-router.put('/:memberId', async (req: Request, res: Response) => {
+router.put('/:memberId', async (req: Request, res: Response): Promise<void> => {
     try {
         const member: IMember | null = await Member.findByIdAndUpdate(
             req.params.memberId,
@@ -161,7 +167,7 @@ router.put('/:memberId', async (req: Request, res: Response) => {
         );
 
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
 
         res.json(member);
@@ -178,11 +184,11 @@ router.put('/:memberId', async (req: Request, res: Response) => {
  * @returns {Error} 404 - Member not found.
  * @returns {Error} 500 - Internal server error.
  */
-router.delete('/:memberId', async (req: Request, res: Response) => {
+router.delete('/:memberId', async (req: Request, res: Response): Promise<void> => {
     try {
         const member: IMember | null = await Member.findByIdAndDelete(req.params.memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
         res.json({ message: 'Member deleted' });
     } catch (error: any) {
@@ -201,25 +207,26 @@ router.delete('/:memberId', async (req: Request, res: Response) => {
  * @returns {Error} 404 - Member not found.
  * @returns {Error} 400 - Validation error.
  */
-router.post('/:memberId/attendance', async (req: Request, res: Response) => {
+router.post('/:memberId/attendance', async (req: Request, res: Response): Promise<void> => {
     console.log('in router.post(/:memberId/attendance')
     try {
         const { memberId } = req.params;
         // Validate ObjectId
         if (!mongoose.Types.ObjectId.isValid(memberId)) {
-          return res.status(400).json({ message: 'Invalid member ID format' });
+           res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, attended } = req.body;
 
         const member: IMember | null = await Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
+        if (member) {       
+            member.attendanceRecord.push({ date, attended });
+            await member.save();
 
-        member.attendanceRecord.push({ date, attended });
-        await member.save();
-
-        res.status(201).json(member.attendanceRecord[member.attendanceRecord.length - 1]);
+            res.status(201).json(member.attendanceRecord[member.attendanceRecord.length - 1]);
+        }
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }
@@ -233,16 +240,17 @@ router.post('/:memberId/attendance', async (req: Request, res: Response) => {
  * @returns {Error} 404 - Member not found.
  * @returns {Error} 500 - Internal server error.
  */
-router.get('/:memberId/attendance', async (req: Request, res: Response) => {
+router.get('/:memberId/attendance', async (req: Request, res: Response): Promise<void> => {
     try {
         const { memberId } = req.params;
         const member: IMember | null = await Member.findById(memberId);
 
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
-
-        res.json(member.attendanceRecord);
+        if (member) {
+             res.json(member.attendanceRecord);
+        }      
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -260,26 +268,28 @@ router.get('/:memberId/attendance', async (req: Request, res: Response) => {
  * @returns {Error} 404 - Member or attendance record not found.
  * @returns {Error} 400 - Validation error.
  */
-router.put('/:memberId/attendance/:recordId', async (req: Request, res: Response) => {
+router.put('/:memberId/attendance/:recordId', async (req: Request, res: Response): Promise<void> => {
     try {
         const { memberId, recordId } = req.params;
         const { date, attended } = req.body;
 
         const member: IMember | null = await Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
+        if (member) {
+            const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
+            if (!record) {
+                res.status(404).json({ message: 'Attendance record not found' });
+            }
+            if (record){
+                record.date = date;
+                record.attended = attended;
+            }
+            await member.save();
 
-        const record = member.attendanceRecord.find(r => r.date.getTime() === Number(recordId));
-        if (!record) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+            res.json(record);
         }
-
-        record.date = date;
-        record.attended = attended;
-        await member.save();
-
-        res.json(record);
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }
@@ -294,24 +304,25 @@ router.put('/:memberId/attendance/:recordId', async (req: Request, res: Response
  * @returns {Error} 404 - Member or attendance record not found.
  * @returns {Error} 500 - Internal server error.
  */
-router.delete('/:memberId/attendance/:recordId', async (req: Request, res: Response) => {
+router.delete('/:memberId/attendance/:recordId', async (req: Request, res: Response): Promise<void> => {
     try {
         const { memberId, recordId } = req.params;
 
         const member: IMember | null = await Member.findById(memberId);
         if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+             res.status(404).json({ message: 'Member not found' });
         }
+        if (member) {
+            const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
+            if (recordIndex === -1) {
+                res.status(404).json({ message: 'Attendance record not found' });
+            }
 
-        const recordIndex = member.attendanceRecord.findIndex(r => r.date.getTime() === Number(recordId));
-        if (recordIndex === -1) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+            member.attendanceRecord.splice(recordIndex, 1);
+            await member.save();
+
+            res.json({ message: 'Attendance record deleted' });
         }
-
-        member.attendanceRecord.splice(recordIndex, 1);
-        await member.save();
-
-        res.json({ message: 'Attendance record deleted' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -332,25 +343,26 @@ router.delete('/:memberId/attendance/:recordId', async (req: Request, res: Respo
  * @returns {Error} 404 - Member not found.
  * @returns {Error} 400 - Validation error.
  */
-router.post('/:memberId/tithes', async (req: Request, res: Response) => {
+router.post('/:memberId/tithes', async (req: Request, res: Response): Promise<void> => {
   console.log('in router.post(/:memberId/tithes')
   try {
       const { memberId } = req.params;
       // Validate ObjectId
       if (!mongoose.Types.ObjectId.isValid(memberId)) {
-        return res.status(400).json({ message: 'Invalid member ID format' });
+         res.status(400).json({ message: 'Invalid member ID format' });
       }
       const { date, amount } = req.body;
 
       const member: IMember | null = await Member.findById(memberId);
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
+      if (member) {
+        member.tithes.push({ date, amount });
+        await member.save();
 
-      member.tithes.push({ date, amount });
-      await member.save();
-
-      res.status(201).json(member.tithes[member.tithes.length - 1]);
+        res.status(201).json(member.tithes[member.tithes.length - 1]);
+      }
   } catch (error: any) {
       res.status(400).json({ message: error.message });
   }
@@ -364,16 +376,17 @@ router.post('/:memberId/tithes', async (req: Request, res: Response) => {
 * @returns {Error} 404 - Member not found.
 * @returns {Error} 500 - Internal server error.
 */
-router.get('/:memberId/tithes', async (req: Request, res: Response) => {
+router.get('/:memberId/tithes', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId } = req.params;
       const member: IMember | null = await Member.findById(memberId);
 
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
-
-      res.json(member.tithes);
+      if (member) {
+        res.json(member.tithes);
+      }     
   } catch (error: any) {
       res.status(500).json({ message: error.message });
   }
@@ -391,26 +404,29 @@ router.get('/:memberId/tithes', async (req: Request, res: Response) => {
 * @returns {Error} 404 - Member or tithe record not found.
 * @returns {Error} 400 - Validation error.
 */
-router.put('/:memberId/tithes/:recordId', async (req: Request, res: Response) => {
+router.put('/:memberId/tithes/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
       const { date, amount } = req.body;
 
       const member: IMember | null = await Member.findById(memberId);
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
+      if (member) {
+        const record = member.tithes.find(r => r.date.getTime() === Number(recordId));
+      
+        if (!record) {
+            res.status(404).json({ message: 'Attendance record not found' });
+        }
+        if (record) {
+            record.date = date;
+            record.amount = amount;
+            await member.save();
 
-      const record = member.tithes.find(r => r.date.getTime() === Number(recordId));
-      if (!record) {
-          return res.status(404).json({ message: 'Attendance record not found' });
+            res.json(record);
+        }
       }
-
-      record.date = date;
-      record.amount = amount;
-      await member.save();
-
-      res.json(record);
   } catch (error: any) {
       res.status(400).json({ message: error.message });
   }
@@ -425,24 +441,25 @@ router.put('/:memberId/tithes/:recordId', async (req: Request, res: Response) =>
 * @returns {Error} 404 - Member or tithe record not found.
 * @returns {Error} 500 - Internal server error.
 */
-router.delete('/:memberId/tithes/:recordId', async (req: Request, res: Response) => {
+router.delete('/:memberId/tithes/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
 
       const member: IMember | null = await Member.findById(memberId);
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
+      if (member) {
+            const recordIndex = member.tithes.findIndex(r => r.date.getTime() === Number(recordId));
+            if (recordIndex === -1) {
+                res.status(404).json({ message: 'Tithe record not found' });
+            }
 
-      const recordIndex = member.tithes.findIndex(r => r.date.getTime() === Number(recordId));
-      if (recordIndex === -1) {
-          return res.status(404).json({ message: 'Tithe record not found' });
-      }
+            member.tithes.splice(recordIndex, 1);
+            await member.save();
 
-      member.tithes.splice(recordIndex, 1);
-      await member.save();
-
-      res.json({ message: 'Tithe record deleted' });
+            res.json({ message: 'Tithe record deleted' });
+       }
   } catch (error: any) {
       res.status(500).json({ message: error.message });
   }
@@ -460,25 +477,26 @@ router.delete('/:memberId/tithes/:recordId', async (req: Request, res: Response)
  * @returns {Error} 404 - Member not found.
  * @returns {Error} 400 - Validation error.
  */
-router.post('/:memberId/offerings', async (req: Request, res: Response) => {
+router.post('/:memberId/offerings', async (req: Request, res: Response): Promise<void> => {
   console.log('in router.post(/:memberId/offerings')
   try {
       const { memberId } = req.params;
       // Validate ObjectId
       if (!mongoose.Types.ObjectId.isValid(memberId)) {
-        return res.status(400).json({ message: 'Invalid member ID format' });
+         res.status(400).json({ message: 'Invalid member ID format' });
       }
       const { date, amount } = req.body;
 
       const member: IMember | null = await Member.findById(memberId);
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
+      if (member) {
+            member.offerings.push({ date, amount });
+            await member.save();
 
-      member.offerings.push({ date, amount });
-      await member.save();
-
-      res.status(201).json(member.tithes[member.offerings.length - 1]);
+            res.status(201).json(member.tithes[member.offerings.length - 1]);
+      }
   } catch (error: any) {
       res.status(400).json({ message: error.message });
   }
@@ -492,16 +510,17 @@ router.post('/:memberId/offerings', async (req: Request, res: Response) => {
 * @returns {Error} 404 - Member not found.
 * @returns {Error} 500 - Internal server error.
 */
-router.get('/:memberId/offerings', async (req: Request, res: Response) => {
+router.get('/:memberId/offerings', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId } = req.params;
       const member: IMember | null = await Member.findById(memberId);
 
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
-
-      res.json(member.offerings);
+      if (member) {
+         res.json(member.offerings);
+      }   
   } catch (error: any) {
       res.status(500).json({ message: error.message });
   }
@@ -519,26 +538,28 @@ router.get('/:memberId/offerings', async (req: Request, res: Response) => {
 * @returns {Error} 404 - Member or offerings record not found.
 * @returns {Error} 400 - Validation error.
 */
-router.put('/:memberId/offerings/:recordId', async (req: Request, res: Response) => {
+router.put('/:memberId/offerings/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
       const { date, amount } = req.body;
 
       const member: IMember | null = await Member.findById(memberId);
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
+      if (member) {
+            const record = member.offerings.find(r => r.date.getTime() === Number(recordId));
+            if (!record) {
+                res.status(404).json({ message: 'Offering record not found' });
+            }
+            if (record) {
+                record.date = date;
+                record.amount = amount;
+                await member.save();
 
-      const record = member.offerings.find(r => r.date.getTime() === Number(recordId));
-      if (!record) {
-          return res.status(404).json({ message: 'Offering record not found' });
+                res.json(record);
+            }
       }
-
-      record.date = date;
-      record.amount = amount;
-      await member.save();
-
-      res.json(record);
   } catch (error: any) {
       res.status(400).json({ message: error.message });
   }
@@ -553,24 +574,25 @@ router.put('/:memberId/offerings/:recordId', async (req: Request, res: Response)
 * @returns {Error} 404 - Member or offerings record not found.
 * @returns {Error} 500 - Internal server error.
 */
-router.delete('/:memberId/offerings/:recordId', async (req: Request, res: Response) => {
+router.delete('/:memberId/offerings/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
 
       const member: IMember | null = await Member.findById(memberId);
       if (!member) {
-          return res.status(404).json({ message: 'Member not found' });
+           res.status(404).json({ message: 'Member not found' });
       }
+      if (member) {
+        const recordIndex = member.offerings.findIndex(r => r.date.getTime() === Number(recordId));
+        if (recordIndex === -1) {
+            res.status(404).json({ message: 'Offerings record not found' });
+        }
 
-      const recordIndex = member.offerings.findIndex(r => r.date.getTime() === Number(recordId));
-      if (recordIndex === -1) {
-          return res.status(404).json({ message: 'Offerings record not found' });
+        member.offerings.splice(recordIndex, 1);
+        await member.save();
+
+        res.json({ message: 'Offering record deleted' });
       }
-
-      member.offerings.splice(recordIndex, 1);
-      await member.save();
-
-      res.json({ message: 'Offering record deleted' });
   } catch (error: any) {
       res.status(500).json({ message: error.message });
   }

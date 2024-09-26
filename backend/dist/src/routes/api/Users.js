@@ -82,7 +82,7 @@ router.post('/', upload.single('avatar'), (req, res) => __awaiter(void 0, void 0
         // Check if user exists
         let user = yield Users_js_1.User.findOne({ email: email });
         if (user) {
-            return res.status(400).json({ errors: [{ msg: 'User already exists' }] });
+            res.status(400).json({ errors: [{ msg: 'User already exists' }] });
         }
         // Hash the password
         const salt = yield bcrypt_1.default.genSalt(10);
@@ -93,7 +93,7 @@ router.post('/', upload.single('avatar'), (req, res) => __awaiter(void 0, void 0
     }
     catch (err) {
         console.error('Error processing file upload:', err); // Log the error
-        return res.status(500).json({ message: 'An error occurred during registration', error: err.message });
+        res.status(500).json({ message: 'An error occurred during registration', error: err.message });
     }
 }));
 // Get all users
@@ -118,10 +118,12 @@ router.get('/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function*
         const user = yield Users_js_1.User.findById(userId);
         console.log('in router.get(/:userId): ' + req.params.userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
         }
         console.log('user: ', user);
-        res.json(user);
+        if (user) {
+            res.json(user);
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -133,9 +135,11 @@ router.put('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, fun
         const { username, email, password, role, avatar } = req.body;
         const user = yield Users_js_1.User.findByIdAndUpdate(req.params.userId, { username, email, password, role, avatar }, { new: true, runValidators: true });
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
         }
-        res.json(user);
+        if (user) {
+            res.json(user);
+        }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
@@ -146,9 +150,11 @@ router.delete('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, 
     try {
         const user = yield Users_js_1.User.findByIdAndDelete(req.params.userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
         }
-        res.json({ message: 'User deleted' });
+        if (user) {
+            res.json({ message: 'User deleted' });
+        }
     }
     catch (error) {
         res.status(500).json({ message: error.message });

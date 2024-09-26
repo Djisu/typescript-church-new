@@ -39,13 +39,15 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Get a specific event by ID
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+       res.status(404).json({ message: 'Event not found' });
     }
-    res.json(event);
+    if (event) {
+      res.json(event);
+    } 
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -76,38 +78,41 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // Delete an event
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const event = await Event.findByIdAndDelete(req.params.id);
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+       res.status(404).json({ message: 'Event not found' });
     }
-    res.json({ message: 'Event deleted' });
+    if (event){
+       res.json({ message: 'Event deleted' });
+    }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 });
 
 // Send text message to event registrants
-router.post('/:id/send-message', async (req: Request, res: Response) => {
+router.post('/:id/send-message', async (req: Request, res: Response): Promise<void> => {
     try {
       const event = await Event.findById(req.params.id);
       if (!event) {
-        return res.status(404).json({ message: 'Event not found' });
+         res.status(404).json({ message: 'Event not found' });
       }
-  
-      const { message } = req.body;
-      if (!message) {
-        return res.status(400).json({ message: 'Message is required' });
+      if (event) {
+        const { message } = req.body;
+        if (!message) {
+          res.status(400).json({ message: 'Message is required' });
+        }
+    
+        // Get the phone numbers of the registered members
+        const phoneNumbers = event.registrations.map(reg => reg.memberId.toString());
+    
+        // Send text messages to the registered members
+        await Promise.all(phoneNumbers.map(phoneNumber => sendTextMessage(phoneNumber, message)));
+    
+        res.json({ message: 'Text messages sent successfully' });
       }
-  
-      // Get the phone numbers of the registered members
-      const phoneNumbers = event.registrations.map(reg => reg.memberId.toString());
-  
-      // Send text messages to the registered members
-      await Promise.all(phoneNumbers.map(phoneNumber => sendTextMessage(phoneNumber, message)));
-  
-      res.json({ message: 'Text messages sent successfully' });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
