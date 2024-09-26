@@ -76,7 +76,7 @@ router.post('/', upload.single('avatar'), (req, res) => __awaiter(void 0, void 0
     console.log('Hit /register');
     console.log('Received request on /register');
     console.log('Request Body:', req.body);
-    console.log('Request Files:', req.files);
+    console.log('Request Files:', req.file);
     try {
         const { username, email, password, role } = req.body;
         // Check if user exists

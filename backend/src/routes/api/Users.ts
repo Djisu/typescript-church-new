@@ -8,6 +8,13 @@ import bcrypt from 'bcrypt';
 
 import { User, IUser, UserSchema } from '../../../models/Users.js';
 
+interface RegisterRequestBody {
+  username: string;
+  email: string;
+  password: string;
+  role: string; // Adjust based on your application's roles
+}
+
 
 const router = express.Router();
 
@@ -54,11 +61,11 @@ router.post('/', upload.single('avatar'), async (req: Request, res: Response) =>
 
   console.log('Received request on /register');
   console.log('Request Body:', req.body);
-  console.log('Request Files:', req.files);
+  console.log('Request Files:', req.file);
 
   try {
     
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role } = req.body as unknown as RegisterRequestBody;
    
     // Check if user exists
     let user = await User.findOne({ email: email });

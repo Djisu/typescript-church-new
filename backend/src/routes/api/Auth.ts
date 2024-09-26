@@ -1,4 +1,6 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import { Request, Response } from 'express';
+//import { check, validationResult } from 'express-validator';
 import { check, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import config from '../../utils/config';
