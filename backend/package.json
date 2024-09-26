@@ -4,7 +4,7 @@
     "description": "A church management system built with Node.js and MongoDB",
     "main": "dist/server.js",
     "scripts": {
-        "build": "tsc",
+        "build": "npm install && tsc",
         "start": "node dist/src/server.js",
         "dev": "concurrently --kill-others-on-fail \"MONGO_URI='mongodb+srv://Djesu:Timbuk2tudjesu@cluster0.nlxec.mongodb.net/churchsoft?retryWrites=true&w=majority&appName=Cluster0' nodemon dist/src/server.js\" \"wait-on http://localhost:3000 && npm run frontend && open http://localhost:5173\"",
         "test": "jest",
