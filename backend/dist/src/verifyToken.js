@@ -1,9 +1,4 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+import jwt from 'jsonwebtoken';
 // Middleware to verify the JWT token
 const verifyToken = (req, res, next) => {
     var _a;
@@ -12,7 +7,7 @@ const verifyToken = (req, res, next) => {
         return res.status(401).json({ message: 'No token provided' });
     }
     try {
-        const decoded = jsonwebtoken_1.default.verify(token, 'your-secret-key');
+        const decoded = jwt.verify(token, 'your-secret-key');
         req.user = decoded; // Type assertion to ensure the decoded object matches the IUser interface
         next();
     }

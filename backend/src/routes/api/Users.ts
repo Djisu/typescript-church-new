@@ -8,6 +8,9 @@ import bcrypt from 'bcrypt';
 
 import { User, IUser, UserSchema } from '../../../models/Users.js';
 
+import { fileURLToPath } from 'url';
+import { dirname as pathDirname, join } from 'path';
+
 interface RegisterRequestBody {
   username: string;
   email: string;
@@ -15,10 +18,13 @@ interface RegisterRequestBody {
   role: string; // Adjust based on your application's roles
 }
 
-
 const router = express.Router();
 
 // Define the uploads directory path under the public folder
+// Define __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = pathDirname(__filename);
+
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 
 // Create uploads directory if it doesn't exist

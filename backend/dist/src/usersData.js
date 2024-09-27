@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const usersData = [
     {
         username: 'johndoe',
@@ -32,5 +30,5 @@ const usersData = [
         role: 'user',
     },
 ];
-exports.default = usersData;
+export default usersData;
 //# sourceMappingURL=usersData.js.map

@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,15 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const Events_1 = require("../../../models/Events");
-const mongoose_1 = __importDefault(require("mongoose"));
-const textMessaging_1 = require("../../utils/textMessaging");
-const router = (0, express_1.Router)();
+import { Router } from 'express';
+import { Event } from '../../../models/Events.js';
+import mongoose from 'mongoose';
+import { sendTextMessage } from '../../utils/textMessaging.js';
+const router = Router();
 // Create a new event
 router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -27,11 +22,11 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             endDate: req.body.endDate,
             location: req.body.location,
             registrations: req.body.registrations.map((reg) => ({
-                memberId: new mongoose_1.default.Types.ObjectId(reg.memberId),
+                memberId: new mongoose.Types.ObjectId(reg.memberId),
                 registeredAt: reg.registeredAt,
             })),
         };
-        const createdEvent = yield Events_1.Event.create(newEvent);
+        const createdEvent = yield Event.create(newEvent);
         res.status(201).json(createdEvent);
     }
     catch (error) {
@@ -41,7 +36,7 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 // Get all events
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const events = yield Events_1.Event.find();
+        const events = yield Event.find();
         res.json(events);
     }
     catch (error) {
@@ -51,7 +46,7 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 // Get a specific event by ID
 router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const event = yield Events_1.Event.findById(req.params.id);
+        const event = yield Event.findById(req.params.id);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
         }
@@ -66,14 +61,14 @@ router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 // Update an event
 router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const updatedEvent = yield Events_1.Event.findByIdAndUpdate(req.params.id, {
+        const updatedEvent = yield Event.findByIdAndUpdate(req.params.id, {
             title: req.body.title,
             description: req.body.description,
             startDate: req.body.startDate,
             endDate: req.body.endDate,
             location: req.body.location,
             registrations: req.body.registrations.map((reg) => ({
-                memberId: new mongoose_1.default.Types.ObjectId(reg.memberId),
+                memberId: new mongoose.Types.ObjectId(reg.memberId),
                 registeredAt: reg.registeredAt,
             })),
         }, { new: true });
@@ -86,7 +81,7 @@ router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 // Delete an event
 router.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const event = yield Events_1.Event.findByIdAndDelete(req.params.id);
+        const event = yield Event.findByIdAndDelete(req.params.id);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
         }
@@ -101,7 +96,7 @@ router.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* 
 // Send text message to event registrants
 router.post('/:id/send-message', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const event = yield Events_1.Event.findById(req.params.id);
+        const event = yield Event.findById(req.params.id);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
         }
@@ -113,7 +108,7 @@ router.post('/:id/send-message', (req, res) => __awaiter(void 0, void 0, void 0,
             // Get the phone numbers of the registered members
             const phoneNumbers = event.registrations.map(reg => reg.memberId.toString());
             // Send text messages to the registered members
-            yield Promise.all(phoneNumbers.map(phoneNumber => (0, textMessaging_1.sendTextMessage)(phoneNumber, message)));
+            yield Promise.all(phoneNumbers.map(phoneNumber => sendTextMessage(phoneNumber, message)));
             res.json({ message: 'Text messages sent successfully' });
         }
     }
@@ -121,5 +116,5 @@ router.post('/:id/send-message', (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(500).json({ message: error.message });
     }
 }));
-exports.default = router;
+export default router;
 //# sourceMappingURL=Events.js.map

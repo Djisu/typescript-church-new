@@ -4,16 +4,37 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 
 import multer, { diskStorage, StorageEngine } from 'multer'; // Use lowercase 'multer'
-import eventsRoute from './routes/api/Events';
-import membersRoute from './routes/api/Members';
-import usersRoute from './routes/api/Users';
-import authRoute from './routes/api/Auth';
+import eventsRoute from './routes/api/Events.js';
+import membersRoute from './routes/api/Members.js';
+import usersRoute from './routes/api/Users.js';
+import authRoute from './routes/api/Auth.js';
 
 import colors from 'colors';
 import { ConnectOptions } from 'mongoose';
 import path  from 'path';
 
-//type File = Express.multer.File;
+import { fileURLToPath } from 'url';
+import { dirname as pathDirname, join } from 'path';
+
+///////Experiment////////
+//import { Request, Response } from 'express';
+
+// import expressValidator from 'express-validator';
+// const { check, validationResult } = expressValidator;
+import { check, validationResult } from 'express-validator';
+
+import * as jwt from 'jsonwebtoken';
+
+//import config from '../../utils/config.js';
+import config from './utils/config.js';
+//import { User } from '../../../models/Users.js';
+import { User, IUser } from '../models/Users.js';
+
+//import { sendResetEmail } from '../../utils/email.js';
+import { sendResetEmail } from './utils/email.js';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+//////End of Experiment/////
 
 
 
@@ -49,20 +70,87 @@ mongoose.connect(dbURI, {
     console.error('MongoDB connection error:', err);
 });
 
-const allowedOrigins = [
-    'https://church-management-frontend.onrender.com',
-    'http://localhost:5173' // Allow local development
-];
-// Middleware configuration
+// const allowedOrigins = [
+//     'https://church-management-frontend.onrender.com',
+//     'http://localhost:5173' // Allow local development
+// ];
+
+// Use CORS middleware
 app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true // If you need to send cookies or authentication headers
+  origin: 'http://localhost:5173', // Allow requests from this origin
+  methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+  credentials: true, // Allow credentials such as cookies
 }));
 app.options('*', cors()); // Enable pre-flight across-the-board
+app.options('/api/auth', cors()); // Preflight response for specific route
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+///////Experiment////////
+app.post('/api/auth', [
+  check('email', 'Please include a valid email').isEmail(),
+  check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+], async (req: Request, res: Response):  Promise<void> => {
+
+  console.log('Route hit backend');
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+  }
+
+  const { email, password } = req.body;
+
+  
+
+  try {
+      const user: IUser | null = await User.findOne({ email });
+
+      if (!user) {
+           res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+      }
+      if (user) {
+          const isMatch = await user.comparePassword(password);
+
+          if (!isMatch) {
+              res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+          }
+
+          const payload = {
+              user: {
+                  id: user._id,
+                  username: user.username,
+                  email: user.email,
+                  role: user.role,
+                  avatar: user.avatar
+              }
+          };
+
+          const token = jwt.sign(
+              payload,
+              config.jwtSecret as string,
+              { expiresIn: 360000 }, 
+          );
+          console.log('tokenx: ', token)
+          res.json({token, user}) 
+      }
+  } catch (err) {
+      console.error('Error in /api/auth route:', err);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Ensure OPTIONS request can be handled
+app.options('/api/auth', (req, res) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200); // Respond with 200 OK
+});
+/////End of Experiment
 
 // Define routes
 app.use('/api/events', eventsRoute);
@@ -76,6 +164,9 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Serve static files from the frontend build directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = pathDirname(__filename);
+
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // Set up multer storage

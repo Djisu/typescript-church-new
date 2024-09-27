@@ -1,6 +1,7 @@
 {
     "name": "church-management-system",
     "version": "1.0.0",
+    "type": "module",
     "description": "A church management system built with Node.js and MongoDB",
     "main": "dist/server.js",
     "scripts": {

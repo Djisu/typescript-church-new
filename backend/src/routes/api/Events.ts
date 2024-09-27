@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
-import { Event, IEvent } from '../../../models/Events';
+import { Event, IEvent } from '../../../models/Events.js';
 import mongoose from 'mongoose';
-import { sendTextMessage } from '../../utils/textMessaging'; 
+import { sendTextMessage } from '../../utils/textMessaging.js'; 
 
 const router = Router();
 

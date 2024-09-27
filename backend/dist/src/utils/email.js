@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,22 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendResetEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+dotenv.config();
 const frontendUrl = process.env.FRONTEND_URL; // Access the environment variable
 const appPassword = process.env.APP_PASSWORD;
 const emailUser = process.env.EMAIL_USER;
-const sendResetEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
+export const sendResetEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(' in sendResetEmail');
     console.log('Email User:', emailUser);
     console.log('App Password:', appPassword);
-    const transport = nodemailer_1.default.createTransport({
+    const transport = nodemailer.createTransport({
         service: 'gmail',
         auth: {
             user: emailUser,
@@ -49,5 +43,4 @@ const sendResetEmail = (email, token) => __awaiter(void 0, void 0, void 0, funct
         throw new Error('Could not send reset email');
     }
 });
-exports.sendResetEmail = sendResetEmail;
 //# sourceMappingURL=email.js.map

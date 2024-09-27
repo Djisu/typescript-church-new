@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { Member, IMember } from '../../../models/Members';
+import { Member, IMember } from '../../../models/Members.js';
 //import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
 //import  nodemailer, { createTransport, SendMailOptions, SentMessageInfo } from 'nodemailer';
 import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';

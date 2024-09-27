@@ -1,15 +1,16 @@
 import express from 'express';
 import { Request, Response } from 'express';
 
-import expressValidator from 'express-validator';
-const { check, validationResult } = expressValidator;
+// import expressValidator from 'express-validator';
+// const { check, validationResult } = expressValidator;
+import { check, validationResult } from 'express-validator';
 
 import * as jwt from 'jsonwebtoken';
 
-import config from '../../utils/config';
+import config from '../../utils/config.js';
 import { User, IUser } from '../../../models/Users.js';
 
-import { sendResetEmail } from '../../utils/email';
+import { sendResetEmail } from '../../utils/email.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 

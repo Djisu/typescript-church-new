@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,24 +7,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const Members_1 = require("../../../models/Members");
+import express from 'express';
+import { Member } from '../../../models/Members.js';
 //import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
 //import  nodemailer, { createTransport, SendMailOptions, SentMessageInfo } from 'nodemailer';
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const crypto_1 = __importDefault(require("crypto"));
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const mongoose_1 = __importDefault(require("mongoose"));
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
 const frontendUrl = process.env.FRONTEND_URL; // Access the environment variable
 const emailPassword = process.env.EMAIL_PASS;
 const appPassword = process.env.APP_PASSWORD;
 const emailUser = process.env.EMAIL_USER;
-const router = express_1.default.Router();
-const transport = nodemailer_1.default.createTransport({
+const router = express.Router();
+const transport = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: emailUser,
@@ -58,14 +53,14 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let { firstName, lastName, email, password, username } = req.body;
         // Check if the user already exists
-        const existingUser = yield Members_1.Member.findOne({ email });
+        const existingUser = yield Member.findOne({ email });
         if (existingUser) {
             res.status(400).json({ message: 'User already exists' });
         }
         // Create a verification token
-        const verificationToken = crypto_1.default.randomBytes(32).toString('hex');
+        const verificationToken = crypto.randomBytes(32).toString('hex');
         // Hash the password before saving
-        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        const hashedPassword = yield bcrypt.hash(password, 10);
         // Create initial member data
         const initialMemberData = {
             firstName,
@@ -82,7 +77,7 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             address: req.body.address || null,
         };
         // Create and save the new member
-        const newMember = new Members_1.Member(initialMemberData);
+        const newMember = new Member(initialMemberData);
         yield newMember.save();
         // Send verification email
         const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
@@ -115,7 +110,7 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
  */
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const members = yield Members_1.Member.find({});
+        const members = yield Member.find({});
         res.json(members);
     }
     catch (error) {
@@ -131,7 +126,7 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
  */
 router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const member = yield Members_1.Member.findById(req.params.memberId);
+        const member = yield Member.findById(req.params.memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -152,7 +147,7 @@ router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
  */
 router.put('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const member = yield Members_1.Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
+        const member = yield Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -172,7 +167,7 @@ router.put('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
  */
 router.delete('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const member = yield Members_1.Member.findByIdAndDelete(req.params.memberId);
+        const member = yield Member.findByIdAndDelete(req.params.memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -198,11 +193,11 @@ router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, voi
     try {
         const { memberId } = req.params;
         // Validate ObjectId
-        if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
+        if (!mongoose.Types.ObjectId.isValid(memberId)) {
             res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, attended } = req.body;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -227,7 +222,7 @@ router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, voi
 router.get('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -255,7 +250,7 @@ router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, vo
     try {
         const { memberId, recordId } = req.params;
         const { date, attended } = req.body;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -288,7 +283,7 @@ router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, vo
 router.delete('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -325,11 +320,11 @@ router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0,
     try {
         const { memberId } = req.params;
         // Validate ObjectId
-        if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
+        if (!mongoose.Types.ObjectId.isValid(memberId)) {
             res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, amount } = req.body;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -354,7 +349,7 @@ router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0,
 router.get('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -382,7 +377,7 @@ router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0
     try {
         const { memberId, recordId } = req.params;
         const { date, amount } = req.body;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -415,7 +410,7 @@ router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0
 router.delete('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -450,11 +445,11 @@ router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void
     try {
         const { memberId } = req.params;
         // Validate ObjectId
-        if (!mongoose_1.default.Types.ObjectId.isValid(memberId)) {
+        if (!mongoose.Types.ObjectId.isValid(memberId)) {
             res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, amount } = req.body;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -479,7 +474,7 @@ router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void
 router.get('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -507,7 +502,7 @@ router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, voi
     try {
         const { memberId, recordId } = req.params;
         const { date, amount } = req.body;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -540,7 +535,7 @@ router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, voi
 router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId, recordId } = req.params;
-        const member = yield Members_1.Member.findById(memberId);
+        const member = yield Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -558,5 +553,5 @@ router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, 
         res.status(500).json({ message: error.message });
     }
 }));
-exports.default = router;
+export default router;
 //# sourceMappingURL=Members.js.map
