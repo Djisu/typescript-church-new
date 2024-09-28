@@ -6,6 +6,11 @@ import { store } from './app/store.ts'
 import { Provider } from 'react-redux'
 //import React from 'react'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || 
+(import.meta.env.MODE === 'development' ? 'http://localhost:3000' : 'https://church-management-backend.onrender.com');
+
+console.log('BASE_URL:', BASE_URL);
+
 // Polyfill for process
 (window as any).process = {
   env: {

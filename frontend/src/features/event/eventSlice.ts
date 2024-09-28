@@ -13,12 +13,15 @@ export interface IEvent {
   updatedAt: Date;
 }
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3000' : 'https://church-management-backend.onrender.com');
+
+
 // thunkActions
 export const createEvent = createAsyncThunk<IEvent, Omit<IEvent, '_id' | 'createdAt' | 'updatedAt'>, { rejectValue: string }>(
   'events/createEvent',
   async (newEvent, { rejectWithValue }) => {
     try {
-      const response = await axios.post<IEvent>('/api/events', newEvent);
+      const response = await axios.post<IEvent>(`${BASE_URL}/api/events`, newEvent);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -31,7 +34,7 @@ export const updateEvent = createAsyncThunk<IEvent, Partial<Omit<IEvent, 'create
   async (updatedEvent, { rejectWithValue }) => {
     try {
       const { _id, ...rest } = updatedEvent;
-      const response = await axios.put<IEvent>(`/api/events/${_id}`, rest);
+      const response = await axios.put<IEvent>(`${BASE_URL}/api/events/${_id}`, rest);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -43,7 +46,7 @@ export const deleteEvent = createAsyncThunk<string, string, { rejectValue: strin
   'events/deleteEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      await axios.delete(`/api/events/${eventId}`);
+      await axios.delete(`${BASE_URL}/api/events/${eventId}`);
       return eventId;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -55,7 +58,7 @@ export const searchEvents = createAsyncThunk<IEvent[], Partial<IEvent>, { reject
   'events/searchEvents',
   async (searchParams, { rejectWithValue }) => {
     try {
-      const response = await axios.get<IEvent[]>('/api/events', { params: searchParams });
+      const response = await axios.get<IEvent[]>(`${BASE_URL}/api/events`, { params: searchParams });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);

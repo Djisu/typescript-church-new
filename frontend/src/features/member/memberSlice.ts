@@ -30,10 +30,14 @@ const initialState: MemberState = {
   error: null,
 };
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3000' : 'https://church-management-backend.onrender.com');
+
+console.log('BASE_URL:', BASE_URL);
+
 export const createMember = createAsyncThunk<IMember, Omit<IMember, '_id' | 'createdAt' | 'updatedAt'>>(
   'member/create',
   async (memberData) => {
-    const response = await axios.post('http://localhost:3000/api/members', JSON.stringify(memberData), {
+    const response = await axios.post(`${BASE_URL}/api/members`, JSON.stringify(memberData), {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -45,7 +49,7 @@ export const createMember = createAsyncThunk<IMember, Omit<IMember, '_id' | 'cre
 export const deleteMember = createAsyncThunk<string, string>(
   'member/delete',
   async (memberId) => {
-    await axios.delete(`/api/members/${memberId}`);
+    await axios.delete(`${BASE_URL}/api/members/${memberId}`);
     return memberId;
   }
 );
@@ -54,7 +58,7 @@ export const recordAttendance = createAsyncThunk<any, { memberId: string; date: 
   'member/recordAttendance',
   async (data) => {
     const { memberId, date, attended } = data;
-    const response = await axios.post(`/api/members/${memberId}/attendance`, { date, attended });
+    const response = await axios.post(`${BASE_URL}/api/members/${memberId}/attendance`, { date, attended });
     return response.data;
   }
 );
