@@ -9,10 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
-mongoose.connect('mongodb://localhost:27017/churchsoft', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
 export const UserSchema = new Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },

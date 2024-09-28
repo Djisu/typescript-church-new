@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 // const { check, validationResult } = expressValidator;
 import { check, validationResult } from 'express-validator';
 
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 import config from '../../utils/config.js';
 import { User, IUser } from '../../../models/Users.js';

@@ -41,6 +41,7 @@ import bcrypt from 'bcrypt';
 //const file: File = req.file;
 
 mongoose.set('strictQuery', false);
+mongoose.set('debug', true);
 
 // Load environment variables from .env file
 dotenv.config();
@@ -57,9 +58,14 @@ const dbURI: string = process.env.MONGODB_URI! //|| 'your_default_connection_str
 
 console.log('About to disconnect')
 
-mongoose.disconnect()
+//mongoose.disconnect()
 
 console.log('ABOUT TO CONNECT')
+
+// Use this for the main connection
+// mongoose.connect('mongodb+srv://Djesu:Timbuk2tudjesu@cluster0.nlxec.mongodb.net/churchsoft?retryWrites=true&w=majority&appName=Cluster0')
+//   .then(() => console.log("MongoDB connected"))
+//   .catch(err => console.error("MongoDB connection error:", err));
 
 mongoose.connect(dbURI, {
     useNewUrlParser: true,
@@ -70,78 +76,23 @@ mongoose.connect(dbURI, {
     console.error('MongoDB connection error:', err);
 });
 
-// const allowedOrigins = [
-//     'https://church-management-frontend.onrender.com',
-//     'http://localhost:5173' // Allow local development
-// ];
+const allowedOrigins = [
+    'https://church-management-frontend.onrender.com',
+    'http://localhost:5173' // Allow local development
+];
 
 // Use CORS middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from this origin
+  origin: allowedOrigins,  //'http://localhost:5173', // Allow requests from this origin
   methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
   credentials: true, // Allow credentials such as cookies
 }));
 app.options('*', cors()); // Enable pre-flight across-the-board
-app.options('/api/auth', cors()); // Preflight response for specific route
+//app.options('/api/auth', cors()); // Preflight response for specific route
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-///////Experiment////////
-app.post('/api/auth', [
-  check('email', 'Please include a valid email').isEmail(),
-  check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
-], async (req: Request, res: Response):  Promise<void> => {
-
-  console.log('Route hit backend');
-
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
-  }
-
-  const { email, password } = req.body;
-
-  
-
-  try {
-      const user: IUser | null = await User.findOne({ email });
-
-      if (!user) {
-           res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-      }
-      if (user) {
-          const isMatch = await user.comparePassword(password);
-
-          if (!isMatch) {
-              res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-          }
-
-          const payload = {
-              user: {
-                  id: user._id,
-                  username: user.username,
-                  email: user.email,
-                  role: user.role,
-                  avatar: user.avatar
-              }
-          };
-
-          const token = jwt.sign(
-              payload,
-              config.jwtSecret as string,
-              { expiresIn: 360000 }, 
-          );
-          console.log('tokenx: ', token)
-          res.json({token, user}) 
-      }
-  } catch (err) {
-      console.error('Error in /api/auth route:', err);
-      res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Ensure OPTIONS request can be handled
 app.options('/api/auth', (req, res) => {

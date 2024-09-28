@@ -11,7 +11,7 @@ import express from 'express';
 // import expressValidator from 'express-validator';
 // const { check, validationResult } = expressValidator;
 import { check, validationResult } from 'express-validator';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import config from '../../utils/config.js';
 import { User } from '../../../models/Users.js';
 import { sendResetEmail } from '../../utils/email.js';
