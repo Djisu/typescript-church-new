@@ -60,15 +60,27 @@ app.use(cors({
     credentials: true, // Allow credentials such as cookies
 }));
 app.options('*', cors()); // Enable pre-flight across-the-board
-//app.options('/api/auth', cors()); // Preflight response for specific route
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Ensure OPTIONS request can be handled
-app.options('/api/auth', (req, res) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.sendStatus(200); // Respond with 200 OK
+// app.options('/api/auth', (req, res) => {
+//   res.header('Access-Control-Allow-Origin: *');
+//   res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, X-Auth-Token'); 
+//   res.sendStatus(200); // Respond with 200 OK
+// });
+////new Experiment
+//end of new Experiment
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Content-Type-Options, Accept, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Private-Network", "true");
+    res.setHeader("Access-Control-Max-Age", "7200");
+    next();
 });
 /////End of Experiment
 // Define routes
@@ -106,23 +118,6 @@ app.use((req, res, next) => {
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
-// Connect to MongoDB
-// const connectDB = async () => {
-//   try {
-//     await mongoose.disconnect()
-//     await mongoose.connect(dbURI, {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     } as ConnectOptions);
-//     console.log('Connected to MongoDB');
-//     // Event listeners for the connection
-//     mongoose.connection.on('disconnected', () => {
-//       console.log('Disconnected from MongoDB');
-//     });
-//   } catch (err) {
-//     console.error('MongoDB connection error:', err);
-//   }
-// };
 // Start the server
 //const port = process.env.PORT || 3000;
 app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
