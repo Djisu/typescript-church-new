@@ -19,11 +19,11 @@ import authRoute from './routes/api/Auth.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname } from 'path';
-//////End of Experiment/////
-//const file: File = req.file;
 mongoose.set('strictQuery', false);
 mongoose.set('debug', true);
 // Load environment variables from .env file
+const environment = process.env.NODE_ENV || 'development';
+dotenv.config({ path: `.env.${environment}` });
 dotenv.config();
 console.log('Email User:', process.env.EMAIL_USER);
 console.log('App Password:', process.env.APP_PASSWORD);
@@ -49,6 +49,7 @@ mongoose.connect(dbURI, {
 });
 const allowedOrigins = [
     'https://church-management-frontend.onrender.com',
+    'https://typescript-church-new.onrender.com',
     'http://localhost:5173' // Allow local development
 ];
 // Use CORS middleware

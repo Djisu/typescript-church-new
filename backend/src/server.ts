@@ -56,6 +56,7 @@ mongoose.connect(dbURI, {
 
 const allowedOrigins = [
     'https://church-management-frontend.onrender.com',
+    'https://typescript-church-new.onrender.com',
     'http://localhost:5173' // Allow local development
 ];
 
@@ -67,7 +68,6 @@ app.use(cors({
   credentials: true, // Allow credentials such as cookies
 }));
 app.options('*', cors()); // Enable pre-flight across-the-board
-//app.options('/api/auth', cors()); // Preflight response for specific route
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -119,32 +119,10 @@ app.use((req: Request, res: Response, next: any) => {
   next();
 });
 
-
-
 // Catch-all route to serve the frontend application
 app.get('*', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
-
-// Connect to MongoDB
-
-// const connectDB = async () => {
-//   try {
-//     await mongoose.disconnect()
-//     await mongoose.connect(dbURI, {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     } as ConnectOptions);
-//     console.log('Connected to MongoDB');
-
-//     // Event listeners for the connection
-//     mongoose.connection.on('disconnected', () => {
-//       console.log('Disconnected from MongoDB');
-//     });
-//   } catch (err) {
-//     console.error('MongoDB connection error:', err);
-//   }
-// };
 
 // Start the server
 //const port = process.env.PORT || 3000;
