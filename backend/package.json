@@ -7,14 +7,11 @@
     "scripts": {
         "build": "tsc",
         "start": "node dist/src/server.js",
-        "dev": "concurrently --kill-others-on-fail \"MONGO_URI='mongodb+srv://Djesu:Timbuk2tudjesu@cluster0.nlxec.mongodb.net/churchsoft?retryWrites=true&w=majority&appName=Cluster0' nodemon dist/src/server.js\" \"wait-on http://localhost:3000 && npm run frontend && open http://localhost:5173\"",
+        "dev": "concurrently --kill-others-on-fail \"node -r dotenv/config dist/src/server.js\" \"wait-on http://localhost:3000 && npm run frontend && open http://localhost:5173\"",
         "test": "jest",
         "frontend": "cd ../frontend && npm run dev -- --debug",
         "test-concurrently": "concurrently \"echo Backend running\" \"echo Frontend running\"",
         "docs": "typedoc"
-    },
-    "mongodb": {
-        "uri": "mongodb+srv://Djesu:Timbuk2tudjesu@cluster0.nlxec.mongodb.net/churchsoft?retryWrites=true&w=majority&appName=Cluster0"
     },
     "workspaces": [
         "backend",

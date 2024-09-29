@@ -16,34 +16,12 @@ import path  from 'path';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname, join } from 'path';
 
-///////Experiment////////
-//import { Request, Response } from 'express';
-
-// import expressValidator from 'express-validator';
-// const { check, validationResult } = expressValidator;
-import { check, validationResult } from 'express-validator';
-
-import * as jwt from 'jsonwebtoken';
-
-//import config from '../../utils/config.js';
-import config from './utils/config.js';
-//import { User } from '../../../models/Users.js';
-import { User, IUser } from '../models/Users.js';
-
-//import { sendResetEmail } from '../../utils/email.js';
-import { sendResetEmail } from './utils/email.js';
-import crypto from 'crypto';
-import bcrypt from 'bcrypt';
-//////End of Experiment/////
-
-
-
-//const file: File = req.file;
-
 mongoose.set('strictQuery', false);
 mongoose.set('debug', true);
 
 // Load environment variables from .env file
+const environment = process.env.NODE_ENV || 'development';
+dotenv.config({ path: `.env.${environment}` });
 dotenv.config();
 
 console.log('Email User:', process.env.EMAIL_USER);

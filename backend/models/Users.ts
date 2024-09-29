@@ -2,11 +2,6 @@ import mongoose, { Schema, Document, ObjectId, Types  } from 'mongoose';
 import { ConnectOptions } from 'mongoose';
 import bcrypt from 'bcrypt'
 
-// mongoose.connect('mongodb://localhost:27017/churchsoft', {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// } as ConnectOptions);
-
 export interface IUser extends Document {
   username: string;
   email: string;
