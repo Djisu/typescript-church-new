@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import express, { Request, Response, Express } from 'express';
+import express, { Request, Response, Express, NextFunction  } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
@@ -73,13 +73,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Ensure OPTIONS request can be handled
-app.options('/api/auth', (req, res) => {
-  res.header('Access-Control-Allow-Origin: *');
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, X-Auth-Token'); 
-  res.sendStatus(200); // Respond with 200 OK
+// app.options('/api/auth', (req, res) => {
+//   res.header('Access-Control-Allow-Origin: *');
+//   res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, X-Auth-Token'); 
+//   res.sendStatus(200); // Respond with 200 OK
+// });
+////new Experiment
+
+//end of new Experiment
+
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
+  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Content-Type-Options, Accept, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
+  res.setHeader("Access-Control-Max-Age", "7200");
+
+  next();
 });
 /////End of Experiment
 
