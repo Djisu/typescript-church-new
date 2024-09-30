@@ -74,47 +74,47 @@ app.use(express.urlencoded({ extended: true }));
 // Define allowed methods and headers
 
 // Define allowed methods and headers
-// const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
-// const allowHeaders = [
-//     'Content-Type',
-//     'Authorization',
-//     'X-Content-Type-Options',
-//     'Accept',
-//     'X-Requested-With',
-//     'Origin',
-//     'Access-Control-Request-Method',
-//     'Access-Control-Request-Headers'
-// ];
+const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
+const allowHeaders = [
+    'Content-Type',
+    'Authorization',
+    'X-Content-Type-Options',
+    'Accept',
+    'X-Requested-With',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+];
 
-// app.options("*", (req: Request, res: Response) => {
-//     console.log("preflight");
+app.options("*", (req: Request, res: Response) => {
+    console.log("preflight");
 
-//     const origin = req.headers.origin;
-//     const requestedMethod = req.headers["access-control-request-method"];
-//     const requestedHeaders = req.headers["access-control-request-headers"];
+    const origin = req.headers.origin;
+    const requestedMethod = req.headers["access-control-request-method"];
+    const requestedHeaders = req.headers["access-control-request-headers"];
 
-//     if (
-//         origin === "https://church-management-frontend.onrender.com" &&
-//         requestedMethod && allowMethods.includes(requestedMethod as string) &&
-//         requestedHeaders && allowHeaders.includes(requestedHeaders as string)
-//     ) {
-//         console.log("pass");
-//          res.status(204).send();
-//     } else {
-//         console.log("fail");
-//          res.status(403).send(); // Optional: return forbidden status
-//     }
-//     return
-// });
+    if (
+        origin === "https://church-management-frontend.onrender.com" &&
+        requestedMethod && allowMethods.includes(requestedMethod as string) &&
+        requestedHeaders && allowHeaders.includes(requestedHeaders as string)
+    ) {
+        console.log("pass");
+         res.status(204).send();
+    } else {
+        console.log("fail");
+         res.status(403).send(); // Optional: return forbidden status
+    }
+    return
+});
 ////new Experiment
 
 //end of new Experiment
 
-app.use(cors({
-  origin: 'https://church-management-frontend.onrender.com', // Allow your frontend origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true // Optional, if you need to include cookies in requests
-}));
+// app.use(cors({
+//   origin: 'https://church-management-frontend.onrender.com', // Allow your frontend origin
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   credentials: true // Optional, if you need to include cookies in requests
+// }));
 
 // const corsOptions ={
 //   origin:'https://church-management-frontend.onrender.com', 
