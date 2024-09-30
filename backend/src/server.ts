@@ -115,7 +115,12 @@ app.options("*", (req: Request, res: Response) => {
 
 //end of new Experiment
 
-
+const corsOptions ={
+  origin:'https://church-management-frontend.onrender.com', 
+  credentials:true,            //access-control-allow-credentials:true
+  optionSuccessStatus:200
+}
+app.use(cors(corsOptions));
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
 //   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
@@ -127,13 +132,13 @@ app.options("*", (req: Request, res: Response) => {
 //   next();
 // });
 //app.use(cors())
-app.use(function (req: Request, res: Response, next: NextFunction) {
-  //Enabling CORS
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
-    next();
-  });
+// app.use(function (req: Request, res: Response, next: NextFunction) {
+//   //Enabling CORS
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
+//     next();
+//   });
 /////End of Experiment
 
 // Define routes
