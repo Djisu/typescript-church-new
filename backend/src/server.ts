@@ -110,13 +110,18 @@ app.use(express.urlencoded({ extended: true }));
 
 //end of new Experiment
 
+app.use(cors({
+  origin: 'https://church-management-frontend.onrender.com', // Allow your frontend origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true // Optional, if you need to include cookies in requests
+}));
 
-const corsOptions ={
-  origin:'https://church-management-frontend.onrender.com', 
-  credentials:true,            //access-control-allow-credentials:true
-  optionSuccessStatus:200
-}
-app.use(cors(corsOptions));
+// const corsOptions ={
+//   origin:'https://church-management-frontend.onrender.com', 
+//   credentials:true,            //access-control-allow-credentials:true
+//   optionSuccessStatus:200
+// }
+// app.use(cors(corsOptions));
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
 //   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
