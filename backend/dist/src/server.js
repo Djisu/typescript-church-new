@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import dotenv from 'dotenv';
 import express from 'express';
+import cors from 'cors';
 import mongoose from 'mongoose';
 import multer, { diskStorage } from 'multer'; // Use lowercase 'multer'
 import eventsRoute from './routes/api/Events.js';
@@ -42,54 +43,63 @@ mongoose.connect(dbURI, {
 }).catch(err => {
     console.error('MongoDB connection error:', err);
 });
-// const allowedOrigins = [
-//     'https://church-management-frontend.onrender.com',
-//     'https://typescript-church-new.onrender.com',
-//     'http://localhost:5173' // Allow local development
-// ];
-// // Use CORS middleware
-// app.use(cors({
-//   origin: allowedOrigins,  //'http://localhost:5173', // Allow requests from this origin
-//   methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
-//   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-//   credentials: true, // Allow credentials such as cookies
-// }));
-// app.options('*', cors()); // Enable pre-flight across-the-board
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const allowedOrigins = [
+    'https://church-management-frontend.onrender.com',
+    'http://localhost:5173' // Allow local development
+];
+// Use CORS middleware
+app.use(cors({
+    origin: allowedOrigins, //'http://localhost:5173', // Allow requests from this origin
+    methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    credentials: true, // Allow credentials such as cookies
+}));
+app.options('*', cors()); // Enable pre-flight across-the-board
 // Ensure OPTIONS request can be handled
 // Set preflight
 // Define allowed methods and headers
 // Define allowed methods and headers
-const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
-const allowHeaders = [
-    'Content-Type',
-    'Authorization',
-    'X-Content-Type-Options',
-    'Accept',
-    'X-Requested-With',
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-];
-app.options("*", (req, res) => {
-    console.log("preflight");
-    const origin = req.headers.origin;
-    const requestedMethod = req.headers["access-control-request-method"];
-    const requestedHeaders = req.headers["access-control-request-headers"];
-    if (origin === "https://church-management-frontend.onrender.com" &&
-        requestedMethod && allowMethods.includes(requestedMethod) &&
-        requestedHeaders && allowHeaders.includes(requestedHeaders)) {
-        console.log("pass");
-        res.status(204).send();
-    }
-    else {
-        console.log("fail");
-        res.status(403).send(); // Optional: return forbidden status
-    }
-    return;
-});
-////new Experiment
+// const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
+// const allowHeaders = [
+//     'Content-Type',
+//     'Authorization',
+//     'X-Content-Type-Options',
+//     'Accept',
+//     'X-Requested-With',
+//     'Origin',
+//     'Access-Control-Request-Method',
+//     'Access-Control-Request-Headers'
+// ];
+// app.options("*", (req: Request, res: Response) => {
+//     console.log("preflight");
+//     const origin = req.headers.origin;
+//     const requestedMethod = req.headers["access-control-request-method"];
+//     const requestedHeaders = req.headers["access-control-request-headers"];
+//     if (
+//         origin === "https://church-management-frontend.onrender.com" &&
+//         requestedMethod && allowMethods.includes(requestedMethod as string) &&
+//         requestedHeaders && allowHeaders.includes(requestedHeaders as string)
+//     ) {
+//         console.log("pass");
+//          res.status(204).send();
+//     } else {
+//         console.log("fail");
+//          res.status(403).send(); // Optional: return forbidden status
+//     }
+//     return
+// });
+// <httpProtocol>
+//   <customHeaders>
+//     <add name="Access-Control-Allow-Origin" value="*"/>
+//     <add name="Access-Control-Allow-Headers" value="Origin, Content-Type, X-Auth-Token"/>
+//     <add name="Access-Control-Allow-Methods" value="GET, POST, PUT, DELETE, OPTIONS" />
+//     <add name="Content-Type" value="application/json"/>
+//     <add name="Access-Control-Allow-Credentials" value="true" />
+//   </customHeaders>
+// </httpProtocol>
+// ////new Experiment
 //end of new Experiment
 // app.use(cors({
 //   origin: 'https://church-management-frontend.onrender.com', // Allow your frontend origin
