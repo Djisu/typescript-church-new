@@ -35,10 +35,6 @@ const dbURI = process.env.MONGODB_URI; //|| 'your_default_connection_string'; //
 console.log('About to disconnect');
 //mongoose.disconnect()
 console.log('ABOUT TO CONNECT');
-// Use this for the main connection
-// mongoose.connect('mongodb+srv://Djesu:Timbuk2tudjesu@cluster0.nlxec.mongodb.net/churchsoft?retryWrites=true&w=majority&appName=Cluster0')
-//   .then(() => console.log("MongoDB connected"))
-//   .catch(err => console.error("MongoDB connection error:", err));
 mongoose.connect(dbURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -47,53 +43,54 @@ mongoose.connect(dbURI, {
 }).catch(err => {
     console.error('MongoDB connection error:', err);
 });
-const allowedOrigins = [
-    'https://church-management-frontend.onrender.com',
-    'https://typescript-church-new.onrender.com',
-    'http://localhost:5173' // Allow local development
-];
-// Use CORS middleware
-app.use(cors({
-    origin: allowedOrigins, //'http://localhost:5173', // Allow requests from this origin
-    methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-    credentials: true, // Allow credentials such as cookies
-}));
-app.options('*', cors()); // Enable pre-flight across-the-board
+// const allowedOrigins = [
+//     'https://church-management-frontend.onrender.com',
+//     'https://typescript-church-new.onrender.com',
+//     'http://localhost:5173' // Allow local development
+// ];
+// // Use CORS middleware
+// app.use(cors({
+//   origin: allowedOrigins,  //'http://localhost:5173', // Allow requests from this origin
+//   methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
+//   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+//   credentials: true, // Allow credentials such as cookies
+// }));
+// app.options('*', cors()); // Enable pre-flight across-the-board
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Ensure OPTIONS request can be handled
 // Set preflight
 // Define allowed methods and headers
 // Define allowed methods and headers
-const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
-const allowHeaders = [
-    'Content-Type',
-    'Authorization',
-    'X-Content-Type-Options',
-    'Accept',
-    'X-Requested-With',
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-];
-app.options("*", (req, res) => {
-    console.log("preflight");
-    const origin = req.headers.origin;
-    const requestedMethod = req.headers["access-control-request-method"];
-    const requestedHeaders = req.headers["access-control-request-headers"];
-    if (origin === "https://church-management-frontend.onrender.com" &&
-        requestedMethod && allowMethods.includes(requestedMethod) &&
-        requestedHeaders && allowHeaders.includes(requestedHeaders)) {
-        console.log("pass");
-        res.status(204).send();
-    }
-    else {
-        console.log("fail");
-        res.status(403).send(); // Optional: return forbidden status
-    }
-    return;
-});
+// const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
+// const allowHeaders = [
+//     'Content-Type',
+//     'Authorization',
+//     'X-Content-Type-Options',
+//     'Accept',
+//     'X-Requested-With',
+//     'Origin',
+//     'Access-Control-Request-Method',
+//     'Access-Control-Request-Headers'
+// ];
+// app.options("*", (req: Request, res: Response) => {
+//     console.log("preflight");
+//     const origin = req.headers.origin;
+//     const requestedMethod = req.headers["access-control-request-method"];
+//     const requestedHeaders = req.headers["access-control-request-headers"];
+//     if (
+//         origin === "https://church-management-frontend.onrender.com" &&
+//         requestedMethod && allowMethods.includes(requestedMethod as string) &&
+//         requestedHeaders && allowHeaders.includes(requestedHeaders as string)
+//     ) {
+//         console.log("pass");
+//          res.status(204).send();
+//     } else {
+//         console.log("fail");
+//          res.status(403).send(); // Optional: return forbidden status
+//     }
+//     return
+// });
 ////new Experiment
 //end of new Experiment
 const corsOptions = {
