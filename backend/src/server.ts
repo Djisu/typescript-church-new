@@ -55,6 +55,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const allowedOrigins = [
     'https://church-management-frontend.onrender.com',
+    'https://typescript-church-new.onrender.com',
     'http://localhost:5173' // Allow local development
 ];
 
