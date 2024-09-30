@@ -63,23 +63,54 @@ app.options('*', cors()); // Enable pre-flight across-the-board
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Ensure OPTIONS request can be handled
-// app.options('/api/auth', (req, res) => {
-//   res.header('Access-Control-Allow-Origin: *');
-//   res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-//   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-//   res.header('Access-Control-Allow-Headers', 'Content-Type, X-Auth-Token'); 
-//   res.sendStatus(200); // Respond with 200 OK
-// });
+// Set preflight
+// Define allowed methods and headers
+// Define allowed methods and headers
+const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
+const allowHeaders = [
+    'Content-Type',
+    'Authorization',
+    'X-Content-Type-Options',
+    'Accept',
+    'X-Requested-With',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+];
+app.options("*", (req, res) => {
+    console.log("preflight");
+    const origin = req.headers.origin;
+    const requestedMethod = req.headers["access-control-request-method"];
+    const requestedHeaders = req.headers["access-control-request-headers"];
+    if (origin === "https://church-management-frontend.onrender.com" &&
+        requestedMethod && allowMethods.includes(requestedMethod) &&
+        requestedHeaders && allowHeaders.includes(requestedHeaders)) {
+        console.log("pass");
+        res.status(204).send();
+    }
+    else {
+        console.log("fail");
+        res.status(403).send(); // Optional: return forbidden status
+    }
+    return;
+});
 ////new Experiment
 //end of new Experiment
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
-    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Content-Type-Options, Accept, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Private-Network", "true");
-    res.setHeader("Access-Control-Max-Age", "7200");
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
+//   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
+//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Content-Type-Options, Accept, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
+//   res.setHeader("Access-Control-Allow-Credentials", "true");
+//   res.setHeader("Access-Control-Allow-Private-Network", "true");
+//   res.setHeader("Access-Control-Max-Age", "7200");
+//   next();
+// });
+//app.use(cors())
+app.use(function (req, res, next) {
+    //Enabling CORS
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
     next();
 });
 /////End of Experiment
