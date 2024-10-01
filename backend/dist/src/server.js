@@ -17,6 +17,7 @@ import membersRoute from './routes/api/Members.js';
 import usersRoute from './routes/api/Users.js';
 import authRoute from './routes/api/Auth.js';
 import path from 'path';
+import morgan from 'morgan';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname } from 'path';
 mongoose.set('strictQuery', false);
@@ -43,8 +44,6 @@ mongoose.connect(dbURI, {
 }).catch(err => {
     console.error('MongoDB connection error:', err);
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
     'https://church-management-frontend.onrender.com',
     'https://typescript-church-new.onrender.com',
@@ -52,90 +51,20 @@ const allowedOrigins = [
 ];
 // Use CORS middleware
 app.use(cors({
-    origin: allowedOrigins, //'http://localhost:5173', // Allow requests from this origin
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
     credentials: true, // Allow credentials such as cookies
 }));
-app.options('*', cors()); // Enable pre-flight across-the-board
-// Ensure OPTIONS request can be handled
-// Set preflight
-// Define allowed methods and headers
-// Define allowed methods and headers
-// const allowMethods = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
-// const allowHeaders = [
-//     'Content-Type',
-//     'Authorization',
-//     'X-Content-Type-Options',
-//     'Accept',
-//     'X-Requested-With',
-//     'Origin',
-//     'Access-Control-Request-Method',
-//     'Access-Control-Request-Headers'
-// ];
-// app.options("*", (req: Request, res: Response) => {
-//     console.log("preflight");
-//     const origin = req.headers.origin;
-//     const requestedMethod = req.headers["access-control-request-method"];
-//     const requestedHeaders = req.headers["access-control-request-headers"];
-//     if (
-//         origin === "https://church-management-frontend.onrender.com" &&
-//         requestedMethod && allowMethods.includes(requestedMethod as string) &&
-//         requestedHeaders && allowHeaders.includes(requestedHeaders as string)
-//     ) {
-//         console.log("pass");
-//          res.status(204).send();
-//     } else {
-//         console.log("fail");
-//          res.status(403).send(); // Optional: return forbidden status
-//     }
-//     return
-// });
-// <httpProtocol>
-//   <customHeaders>
-//     <add name="Access-Control-Allow-Origin" value="*"/>
-//     <add name="Access-Control-Allow-Headers" value="Origin, Content-Type, X-Auth-Token"/>
-//     <add name="Access-Control-Allow-Methods" value="GET, POST, PUT, DELETE, OPTIONS" />
-//     <add name="Content-Type" value="application/json"/>
-//     <add name="Access-Control-Allow-Credentials" value="true" />
-//   </customHeaders>
-// </httpProtocol>
-// ////new Experiment
-//end of new Experiment
-// app.use(cors({
-//   origin: 'https://church-management-frontend.onrender.com', // Allow your frontend origin
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   credentials: true // Optional, if you need to include cookies in requests
-// }));
-// const corsOptions ={
-//   origin:'https://church-management-frontend.onrender.com', 
-//   credentials:true,            //access-control-allow-credentials:true
-//   optionSuccessStatus:200
-// }
-// app.use(cors(corsOptions));
-// app.use((req: Request, res: Response, next: NextFunction) => {
-//   res.setHeader("Access-Control-Allow-Origin", "https://church-management-frontend.onrender.com");
-//   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE");
-//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Content-Type-Options, Accept, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
-//   res.setHeader("Access-Control-Allow-Credentials", "true");
-//   res.setHeader("Access-Control-Allow-Private-Network", "true");
-//   res.setHeader("Access-Control-Max-Age", "7200");
-//   next();
-// });
-//app.use(cors())
-// app.use(function (req: Request, res: Response, next: NextFunction) {
-//   //Enabling CORS
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
-//     next();
-//   });
-/////End of Experiment
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 // Define routes
 app.use('/api/events', eventsRoute);
 app.use('/api/members', membersRoute);
 app.use('/api/users', usersRoute);
 app.use('/api/auth', authRoute);
+// Enable pre-flight across-the-board for all routes
+app.options('*', cors());
 // Default route
 app.get('/', (req, res) => {
     res.send('Welcome to the API!');
@@ -162,6 +91,14 @@ app.use((req, res, next) => {
     console.log('Request headers:', req.headers); // Log headers for debugging
     next();
 });
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
+app.use(morgan('dev'));
 // Catch-all route to serve the frontend application
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));

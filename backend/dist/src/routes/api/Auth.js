@@ -55,7 +55,7 @@ router.post('/login', [
         }
     }
     catch (err) {
-        console.error('Error in /api/auth route:', err);
+        console.error('Error in /api/auth/login route:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 }));

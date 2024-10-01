@@ -34,8 +34,6 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    
-
     try {
         const user: IUser | null = await User.findOne({ email });
 
@@ -68,7 +66,7 @@ router.post('/login', [
             res.json({token, user}) 
         }
     } catch (err) {
-        console.error('Error in /api/auth route:', err);
+        console.error('Error in /api/auth/login route:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
