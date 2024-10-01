@@ -50,19 +50,21 @@ mongoose.connect(dbURI, {
     console.error('MongoDB connection error:', err);
 });
 
-const allowedOrigins = [
-    'https://church-management-frontend.onrender.com',
-    'https://typescript-church-new.onrender.com',
-    'http://localhost:5173' // Allow local development
-];
+// const allowedOrigins = [
+//     'https://church-management-frontend.onrender.com',
+//     'https://typescript-church-new.onrender.com',
+//     'http://localhost:5173' // Allow local development
+// ];
 
-// Use CORS middleware
-app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-    credentials: true, // Allow credentials such as cookies
-}));
+// // Use CORS middleware
+// app.use(cors({
+//     origin: allowedOrigins,
+//     methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
+//     allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+//     credentials: true, // Allow credentials such as cookies
+// }));
+
+app.use(cors({ origin: 'https://church-management-frontend.onrender.com' }));
 
 
 app.use(express.json());
