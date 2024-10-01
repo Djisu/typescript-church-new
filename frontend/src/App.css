@@ -40,3 +40,27 @@
 .read-the-docs {
   color: #888;
 }
+.btn {
+  display: inline-block; /* Ensure the button is only as wide as its content */
+  padding: 10px 20px; /* Adjust padding as needed */
+  margin: 10px; /* Add margin for spacing between buttons */
+  text-align: center; /* Center text within the button */
+}
+.buttons {
+  display: flex; /* Use flexbox for alignment */
+  justify-content: center; /* Center the buttons horizontally */
+  margin: 20px 0; /* Add margin around the button container */
+}
+
+.login-container {
+  display: flex;                /* Use flexbox */
+  justify-content: center;      /* Center horizontally */
+  align-items: center;          /* Center vertically */
+  height: 100vh;               /* Full viewport height */
+  /* Optional: Set a background color or image */
+  background-color: #f4f4f4;   /* Change as needed */
+}
+
+.landing-inner {
+  text-align: center;           /* Center text within the inner container */
+}

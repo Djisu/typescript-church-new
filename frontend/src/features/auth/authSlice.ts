@@ -54,19 +54,19 @@ console.log('BASE_URL: ', BASE_URL)
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }) => {
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
 
-    console.log('in auth/login', credentials)
+    try {
+      const response = await axios.post(`${BASE_URL}/api/auth/login`, credentials);
 
-    //const response = await axios.post('/api/auth', credentials);
-    const response = await axios.post(`${BASE_URL}/api/auth`, credentials);
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('isAuthenticated', 'true');
 
-    //console.log('response.data: ', response.data)
-
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('isAuthenticated', 'true')
-
-    return response.data;
+      return response.data;
+    } catch (error: any) {
+      console.error('Login Error:', error);
+      return rejectWithValue(error.response.data); // Return error for further handling
+    }
   }
 );
 

@@ -36,8 +36,6 @@ const Landing: React.FC<IProps> = ({ isAuthenticated }) => {
             <Link to="/register" className="btn btn-primary">
               Sign Up
             </Link>
-          </div>
-          <div className="buttons">  
             <Link to="/login" className="btn btn-primary">
               Login
             </Link>
