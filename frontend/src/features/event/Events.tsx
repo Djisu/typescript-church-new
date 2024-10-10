@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { AppDispatch } from '../../app/store'; 
+import { useSelector } from 'react-redux';
 import { IEvent, createEvent } from './eventSlice'; // Adjust the import path as necessary
 import styled from 'styled-components';
 import { RootState } from '../../app/store'; // Adjust the import path for RootState
