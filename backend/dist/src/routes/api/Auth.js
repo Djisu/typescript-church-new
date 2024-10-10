@@ -34,11 +34,13 @@ router.post('/login', [
         const user = yield User.findOne({ email });
         if (!user) {
             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+            return;
         }
         if (user) {
             const isMatch = yield user.comparePassword(password);
             if (!isMatch) {
                 res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+                return;
             }
             const payload = {
                 user: {
@@ -50,13 +52,13 @@ router.post('/login', [
                 }
             };
             const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 360000 });
-            //console.log('tokenx: ', token)
+            // Send success response
             res.json({ token, user });
         }
     }
     catch (err) {
         console.error('Error in /api/auth/login route:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Server error' });
     }
 }));
 // Reset password

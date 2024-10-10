@@ -2,22 +2,31 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 //import { useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import { RootState } from '../../app/store';
-import { detokenize } from './detokenize';
 //import useAlerts from '../../components/useAlerts';
 
-interface AuthState {
-  [x: string]: any;
-  user: {
-    id: string,
-    name:string,
-    email: string,
-    role: string,
-    avatar: string,
-    token: string,
-} | null,
+interface User {
+  id: string;
+  username: string; // Changed to match your backend response
+  email: string;
+  role: string;
+  avatar: string;
+}
 
+interface AuthState {
+  user: User | null;
   loading: 'idle' | 'pending' | 'succeeded' | 'failed';
   error: string | null;
+}
+
+// Define the response type for successful login
+export interface LoginResponse {
+  token: string;
+  user: User; // The user object returned from the backend
+}
+
+// Define the error response type for login
+export interface LoginError {
+  message: string;
 }
 
 // Define the return type of the thunk
@@ -53,20 +62,22 @@ console.log('BASE_URL:', BASE_URL);
 console.log('process.env.NODE_ENV: ', process.env.NODE_ENV)
 console.log('BASE_URL: ', BASE_URL)
 
-export const login = createAsyncThunk(
+export const login = createAsyncThunk<LoginResponse, { email: string; password: string }, { rejectValue: LoginError }>(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
-
+  async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/api/auth/login`, credentials);
 
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('isAuthenticated', 'true');
-
-      return response.data;
+      
+      return response.data; // Return the full response
     } catch (error: any) {
       console.error('Login Error:', error);
-      return rejectWithValue(error.response.data); // Return error for further handling
+      // Return the error message for further handling
+      return rejectWithValue({
+        message: error.response?.data?.message || 'Login failed. Please check your credentials.',
+      });
     }
   }
 );
@@ -124,7 +135,7 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<AuthState['user']>) => {
+    setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
   },
@@ -132,24 +143,28 @@ export const authSlice = createSlice({
     builder
       .addCase(login.pending, (state) => {
         state.loading = 'pending';
+        state.error = null; // Clear error on new request
       })
-      .addCase(login.fulfilled, (state, action: PayloadAction<any>) => {
+      .addCase(login.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
         state.loading = 'succeeded';
-        const [encryptedId, username, userEmail, role, avatar] = detokenize(action.payload.token);
 
-        // Update the user state with detokenized values
-        state.user = {
-          id: encryptedId,
-          name: username,
-          email: userEmail,
-          role,
-          avatar,
-          token: action.payload.token // Assuming you still want to store the token
-        };
+         // Store the token and user details
+         const {token, user} = action.payload;
+ 
+         localStorage.setItem('token', token); // Store the token if needed
+ 
+         // Update the user state
+         state.user = {
+           id: user.id,
+           username: user.username,
+           email: user.email,
+           role: user.role,
+           avatar: user.avatar,
+         };
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = 'failed';
-        state.error = action.error.message || 'Login failed';
+        state.error = action.payload?.message || action.error.message || 'Login failed';
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
@@ -178,8 +193,7 @@ export const authSlice = createSlice({
 });
 
 // Selector function
-export const selectCurrentUsername = (state: RootState) => state.auth.user?.name || ''
-
+export const selectCurrentUsername = (state: RootState) => state.auth.user?.username || ''
 
 export const { setUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,11 +1,13 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcrypt'
 
 export interface IMember extends Document {
-  username: string;
+  userName: string;
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  role: string;
   phone: string;
   address: string;
   membership_type: string;
@@ -21,14 +23,19 @@ export interface IMember extends Document {
   updatedAt: Date;
   verificationToken: string;
   isVerified: Boolean;
+  token?: string | null;
+  resetToken?: string | null; // Add this line
+  resetTokenExpiration?: Date | null; // Add this line
+  comparePassword(password: string): Promise<boolean>;
 }
 
 const MemberSchema: Schema = new Schema({
-  username: { type: String, required: true},
+  userName: { type: String, required: true},
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true},
+  role: { type: String, required: true},
   phone: { type: String, required: false },
   address: { type: String, required: false },
   membership_type:  { type: String, required: false }, // "regular member", "youth member", "senior member"
@@ -65,6 +72,13 @@ const MemberSchema: Schema = new Schema({
     type: Boolean,
     default: false, // This tracks whether the email has been verified
   },
+  token: '',
+  resetToken: { type: String, default: null }, // Add this line
+  resetTokenExpiration: { type: Date, default: null }, // Add this line
 });
+
+MemberSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+  return await bcrypt.compare(password, this.password);
+};
 
 export const Member = mongoose.model<IMember>('Member', MemberSchema);

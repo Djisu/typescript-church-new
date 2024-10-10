@@ -1,10 +1,21 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import mongoose, { Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
 const MemberSchema = new Schema({
-    username: { type: String, required: true },
+    userName: { type: String, required: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    role: { type: String, required: true },
     phone: { type: String, required: false },
     address: { type: String, required: false },
     membership_type: { type: String, required: false }, // "regular member", "youth member", "senior member"
@@ -41,6 +52,14 @@ const MemberSchema = new Schema({
         type: Boolean,
         default: false, // This tracks whether the email has been verified
     },
+    token: '',
+    resetToken: { type: String, default: null }, // Add this line
+    resetTokenExpiration: { type: Date, default: null }, // Add this line
 });
+MemberSchema.methods.comparePassword = function (password) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield bcrypt.compare(password, this.password);
+    });
+};
 export const Member = mongoose.model('Member', MemberSchema);
 //# sourceMappingURL=Members.js.map

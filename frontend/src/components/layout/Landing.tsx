@@ -22,9 +22,6 @@ const Landing: React.FC<IProps> = ({ isAuthenticated }) => {
     }
   }, [dispatch, isAuthenticated]);
 
-  // if (isAuthenticated) {
-  //   return <Navigate to="/dashboard" />;
-  // }
 
   return (
     <section className="login-container landing-container">
@@ -35,6 +32,9 @@ const Landing: React.FC<IProps> = ({ isAuthenticated }) => {
           <div className="buttons">
             <Link to="/register" className="btn btn-primary">
               Sign Up
+            </Link>
+            <Link to="/memberlogin" className="btn btn-primary">
+              Member Login
             </Link>
             <Link to="/login" className="btn btn-primary">
               Login

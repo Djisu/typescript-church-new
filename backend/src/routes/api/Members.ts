@@ -3,10 +3,20 @@ import { Member, IMember } from '../../../models/Members.js';
 //import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
 //import  nodemailer, { createTransport, SendMailOptions, SentMessageInfo } from 'nodemailer';
 import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
+import { check, validationResult } from 'express-validator';
 
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
+
+import jwt from 'jsonwebtoken';
+
+import config from '../../utils/config.js';
+
+import { sendResetEmail } from '../../utils/email.js';
+
+import dotenv from 'dotenv';
+dotenv.config();
 
 const frontendUrl = process.env.FRONTEND_URL; // Access the environment variable
 const emailPassword = process.env.EMAIL_PASS
@@ -34,6 +44,119 @@ const transport = nodemailer.createTransport({
 //     }
 // });
 
+router.post('/login', [
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+], async (req: Request, res: Response): Promise<void> => {
+
+    console.log('Route member /login');
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+        const member: IMember | null = await Member.findOne({ email });
+
+        if (!member) {
+           res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+           return
+        }
+        
+        if (member) {  
+            console.log('member found!!')     
+            const isMatch = await member.comparePassword(password);
+
+            if (!isMatch) {
+                res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+                return
+            }
+            
+            const payload = {
+                member: {
+                    id: member._id,
+                    username: member.userName,
+                    email: member.email,
+                    role: member.role
+                }
+            };
+
+            const token = jwt.sign(
+                payload,
+                config.jwtSecret as string,
+                { expiresIn: 360000 }, 
+            );
+
+            // Send success response
+            console.log({token, member})
+            res.json({token, member}) 
+        }
+    } catch (err) {
+        console.error('Error in /api/auth/login route:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Reset password
+router.post('/request-password-reset', async (req: Request, res: Response) => {
+    console.log('in backend /request-password-reset')
+
+    const { email } = req.body;
+    console.log('email: ', email)
+    const member = await Member.findOne({ email });
+  
+    if (!member) {
+       res.status(404).json({ message: 'Email not found.' });
+    }
+  
+    const token = crypto.randomBytes(32).toString('hex'); // Generate token
+
+    if (member){
+        member.resetToken = token; // Save token to member record
+        member.resetTokenExpiration = new Date(Date.now() + 3600000); // 1 hour expiration
+        await member.save();
+
+        console.log('after member token reset')
+    
+        await sendResetEmail(email, token); // Function to send email
+        res.status(200).json({ message: 'Password reset email sent.' });
+   }
+  });
+
+// Password reset
+router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+    const { token, newPassword } = req.body;
+  
+    const member = await Member.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+  
+    if (!member) {
+      res.status(400).json({ message: 'Invalid or expired token.' });
+    }
+  
+    // Validate new password (e.g., length, complexity)
+    if (newPassword.length < 6) {
+       res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    }
+  
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+
+    if (member){
+        member.password = await bcrypt.hash(newPassword, salt);
+        member.resetToken = undefined; // Clear the token
+        member.resetTokenExpiration = undefined; // Clear expiration
+
+        await member.save(); 
+        res.status(200).json({ message: 'Password has been reset successfully.' });
+    }
+  });
+
+
+
 /**
  * @summary Create a new member and send verification email.
  * @route POST /members
@@ -42,16 +165,16 @@ const transport = nodemailer.createTransport({
  * @param {string} req.body.lastName - The last name of the member.
  * @param {string} req.body.email - The email address of the member.
  * @param {string} req.body.password - The password for the member.
- * @param {string} req.body.username - The username of the member.
+ * @param {string} req.body.membername - The username of the member.
  * @returns {Object} 201 - The created member object.
  * @returns {Error} 400 - User already exists or validation errors.
  */
-router.post('/', async (req: Request, res: Response): Promise<void> => {
-    console.log('in member router.post');
+router.post('/create', async (req: Request, res: Response): Promise<void> => {
+    console.log('in create member ');
     console.log('Incoming request body:', req.body);
 
     try {
-        let { firstName, lastName, email, password, username } = req.body;
+        let { firstName, lastName, email, password, username, role } = req.body;
 
         // Check if the user already exists
         const existingUser = await Member.findOne({ email });
@@ -71,6 +194,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
             lastName,
             email,
             password: hashedPassword,
+            role,
             username,
             status: req.body.status || 'pending approval',
             joinedDate: req.body.joinedDate || new Date(),
@@ -87,7 +211,6 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 
         // Send verification email
         const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
-
 
         type SendMailOptions = any;
         const mailOptions: SendMailOptions = {
@@ -106,9 +229,9 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
                 res.status(500).json({ message: 'Error sending email' });
             }
             console.log('Email sent successfully:', info);
-            res.status(201).json({ message: 'User registered. Check your email for verification.' });
+           
         });
-
+        res.status(201).json({ message: 'User registered. Check your email for verification.' });
     } catch (error: any) {
         console.error('Error:', error);
         res.status(400).json({ message: error.message });

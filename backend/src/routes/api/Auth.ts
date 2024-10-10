@@ -22,7 +22,7 @@ const router = express.Router();
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
-], async (req: Request, res: Response):  Promise<void> => {
+], async (req: Request, res: Response): Promise<void> => {
 
     console.log('Route hit backend');
 
@@ -38,13 +38,16 @@ router.post('/login', [
         const user: IUser | null = await User.findOne({ email });
 
         if (!user) {
-             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+           res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+           return
         }
-        if (user) {
+        
+        if (user) {       
             const isMatch = await user.comparePassword(password);
 
             if (!isMatch) {
                 res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+                return
             }
 
             const payload = {
@@ -62,12 +65,13 @@ router.post('/login', [
                 config.jwtSecret as string,
                 { expiresIn: 360000 }, 
             );
-            //console.log('tokenx: ', token)
+
+            // Send success response
             res.json({token, user}) 
         }
     } catch (err) {
         console.error('Error in /api/auth/login route:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

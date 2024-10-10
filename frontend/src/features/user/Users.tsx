@@ -9,7 +9,13 @@ const Users = () => {
   const dispatch = useAppDispatch();
   const { alerts, addAlert } = useAlerts();
   let [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const [avatar, setAvatar] = useState<File | null>(null);
+
+
   const formRef = useRef<HTMLFormElement>(null);
 
   // Clean up the URL object when the component unmounts or the avatar changes
@@ -31,6 +37,8 @@ const Users = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setMessage(null);
+    setError(null);
 
     if (!avatar) {
       console.error('No avatar uploaded');
@@ -47,13 +55,16 @@ const Users = () => {
     // Compare passwords
     if (password !== confirmPassword) {
       addAlert('error', 'Passwords do not match');
-      setPasswordError('Passwords do not match');
+      passwordError = 'Passwords do not match'
+      setPasswordError(passwordError);
       return;
     }
   
     if (password.length < 6) {
       addAlert('error', 'Password must be at least 6 characters');
-      setPasswordError('Password must be at least 6 characters');
+      passwordError = 'Password must be at least 6 characters'
+      passwordError = 'Password must be at least 6 characters'
+      setPasswordError(passwordError);
       return;
     }
   
@@ -75,26 +86,22 @@ const Users = () => {
   
     // Dispatch to action creator
     try {
-      const data = await dispatch(registerUser(formData)).unwrap();
-  
-      if (registerUser.rejected.match(data)) {
-        addAlert('error', data.payload as string);
-
-        passwordError =  data.payload as string
-        setPasswordError(passwordError);
-      } else {
-        addAlert('success', 'User registered successfully!');
-
-        setPasswordError(null);
-        formRef.current?.reset();
-        setAvatar(null); // Clear avatar state
-      }
-    } catch (error) {
-      addAlert('error', 'An error occurred during registration');
-      setPasswordError('An error occurred during registration');
+      const user = await dispatch(registerUser(formData)).unwrap();
+      
+      // Assuming 'user' is the returned user object
+      addAlert('success', 'User registered successfully!');
+      
+      // You can set the user details to state if needed
+      setMessage(`User ${user.username} registered successfully!`); // Example message
+    
+      setPasswordError(null);
+      formRef.current?.reset();
+      setAvatar(null); // Clear avatar state
+    } catch (error: any) {
+      addAlert('error', error.message || 'An error occurred during registration');
+      setError(error.message || 'An error occurred during registration');
     }
-  };
-
+  }
   // Clear the form 
   const clearForm = () => {
     if (formRef.current) {
@@ -191,6 +198,8 @@ const Users = () => {
         <p className="my-1">
           Already have an account? <Link to="/login">Sign In</Link>
         </p>
+      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       </section>
     </>
   );

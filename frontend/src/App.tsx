@@ -17,6 +17,9 @@ import MemberRegister from './features/member/MemberRegister';
 import MemberProfile from './features/member/MemberProfile';
 import ListMembers from './features/member/ListMembers';
 import MemberDetail from './features/member/MemberDetail';
+import { MemberLogin } from './features/member/MemberLogin';
+import { MemberRequestPasswordReset } from './features/member/MemberRequestPasswordReset';
+import { MemberResetPassword } from './features/member/MemberResetPassword';
 
 import RequestPasswordReset from './features/auth/RequestPasswordReset';
 import ResetPassword from './features/auth/ResetPassword';
@@ -46,6 +49,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/request-password-reset" element={<RequestPasswordReset />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
 
@@ -53,6 +57,9 @@ const App: React.FC = () => {
               <Route path="/memberprofile" element={<MemberProfile />} />
               <Route path="/member/listmembers" element={<ListMembers />} />
               <Route path="/memberdetail" element={<MemberDetail />} />
+             
+              <Route path="/member/request-password-reset" element={<MemberRequestPasswordReset />} />
+              <Route path="/member/reset-password" element={<MemberResetPassword />} />
 
               <Route path="/users" element={<Users />} />
               <Route path="/userpage" element={<UserPage />} />
@@ -61,9 +68,10 @@ const App: React.FC = () => {
               <Route path="/events" element={<Events />} />
              
             </Route>
+            <Route path="/memberlogin" element={<MemberLogin />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/auth/request-password-reset" element={<RequestPasswordReset />} />
+           
             <Route path="*" element={<NoPage />} />
           </Routes>
         </AppContent>

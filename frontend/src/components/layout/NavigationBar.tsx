@@ -5,6 +5,7 @@ import { RootState } from '../../app/store';
 import { logout } from '../../features/auth/authSlice';
 import styled from 'styled-components';
 
+// Styled components (same as before)
 // Styled components
 export const NavContainer = styled.nav`
   background-color: #1f2937;
@@ -102,31 +103,41 @@ const DropdownWrapper: React.FC<DropdownWrapperProps> = ({ $isOpen, children, on
   );
 };
 
+
 export const NavigationBar = () => {
   const dispatch = useAppDispatch();
-
   const navigate = useNavigate();
-  const username = useAppSelector((state: RootState) => state.auth.user?.name || '');
+
+  const username = useAppSelector((state: RootState) => state.auth.user?.username || '');
+  const memberUsername = useAppSelector((state: RootState) => state.members.currentMember?.username || '');
+
+  const role = useAppSelector((state: RootState) => state.members.currentMember?.role || '');
+  const userRole = useAppSelector((state: RootState) => state.auth.user?.role || '');
+
+  console.log('userRole', userRole)
 
   const [$dropdownOpen, setDropdownOpen] = useState(false);
   const [$dropdownOpenMember, setDropdownOpenMember] = useState(false);
 
   useEffect(() => {
-   console.log('hmm')
-  }, [username])
+    console.log('Current Role:', role); // Debugging line
+  }, [username]);
 
   const handleLogout = () => {
-    console.log('in handleLogout')
-      
+    console.log('Logging out...');
     dispatch(logout());
     navigate('/');
+  };
+
+  const handleToggleDropdownMember = () => {
+    setDropdownOpenMember((prev) => !prev);
   };
 
   return (
     <NavContainer>
       <NavContent>
         <NavBrand to="/">ChurchSoft</NavBrand>
-        {username ? (
+        {(username || memberUsername) ? (
           <>
             <NavLinks>
               <li>
@@ -134,15 +145,24 @@ export const NavigationBar = () => {
               </li>
               <li>
                 <span 
-                  onClick={() => setDropdownOpenMember(!$dropdownOpenMember)} 
+                  onClick={handleToggleDropdownMember} 
                   style={{ cursor: 'pointer', color: '#9ca3af' }}
                 >
                   Members
                 </span>
-                <DropdownWrapper $isOpen={$dropdownOpenMember} onMouseLeave={() => setDropdownOpenMember(false)}>                  
-                  <DropdownLink to="/member/listmembers">Member List</DropdownLink>
-                  <DropdownLink to="/memberprofile">Member Profile</DropdownLink>
-                  <DropdownLink to="/memberregister">Member Registration</DropdownLink>
+                <DropdownWrapper $isOpen={$dropdownOpenMember} onMouseLeave={() => setDropdownOpenMember(false)}> 
+                  {userRole === 'admin' && (
+                    <>
+                      <DropdownLink to="/member/listmembers">Member List</DropdownLink>
+                      <DropdownLink to="/user/listusers">User List</DropdownLink>
+                    </>
+                  )}
+                  {role === 'Member' && (
+                    <>
+                      <DropdownLink to="/memberprofile">Member Profile</DropdownLink>
+                      <DropdownLink to="/memberregister">Member Registration</DropdownLink>
+                    </>
+                  )}
                 </DropdownWrapper>
               </li>
               <li>
@@ -153,14 +173,18 @@ export const NavigationBar = () => {
                   Users
                 </span>
                 <DropdownWrapper $isOpen={$dropdownOpen} onMouseLeave={() => setDropdownOpen(false)}>
-                  <DropdownLink to="/user/listusers">User List</DropdownLink>
-                  <DropdownLink to="/userpage">User Details</DropdownLink>
-                  <DropdownLink to="/users">Create User</DropdownLink>
+                  {userRole === 'user' || userRole === 'admin' && (
+                    <>
+                      <DropdownLink to="/userpage">User Details</DropdownLink>
+                      <DropdownLink to="/users">Create User</DropdownLink>
+                    </>
+                  )}
                 </DropdownWrapper>
               </li>
-
               <li>
+              {userRole === 'admin' && (
                 <NavLink to="/events">Events</NavLink>
+              )}                
               </li>
             </NavLinks>
             <NavActions>
@@ -169,23 +193,11 @@ export const NavigationBar = () => {
           </>
         ) : (
           <NavActions>
-            <Link
-              to="/login"
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
+            <Link to="/login" className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
               Login
             </Link>
-            <Link
-              to="/register"
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Register
-            </Link>
-            <Link
-              to="/auth/request-password-reset"
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Forgot Password?
+            <Link to="/memberlogin" className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+              Member Login
             </Link>
           </NavActions>
         )}
@@ -201,7 +213,16 @@ export const NavigationBar = () => {
 
 
 
-// import React, { useState } from 'react';
+
+
+
+
+
+
+
+
+
+// import React, { useEffect, useState } from 'react';
 // import { Link, useNavigate } from 'react-router-dom';
 // import { useAppDispatch, useAppSelector } from '../../app/hooks';
 // import { RootState } from '../../app/store';
@@ -307,11 +328,25 @@ export const NavigationBar = () => {
 
 // export const NavigationBar = () => {
 //   const dispatch = useAppDispatch();
+
 //   const navigate = useNavigate();
-//   const username = useAppSelector((state: RootState) => state.auth.user?.name || '');
+//   const username = useAppSelector((state: RootState) => state.auth.user?.username || '');
+//   //const role = useAppSelector((state: RootState) => state.auth.user?.role || '');
+
 //   const [$dropdownOpen, setDropdownOpen] = useState(false);
+//   const [$dropdownOpenMember, setDropdownOpenMember] = useState(false);
+
+//   const role = localStorage.getItem('role');
+
+//   console.log('role', role)
+
+//   useEffect(() => {
+//    console.log('hmm')
+//   }, [username])
 
 //   const handleLogout = () => {
+//     console.log('in handleLogout')
+      
 //     dispatch(logout());
 //     navigate('/');
 //   };
@@ -320,58 +355,94 @@ export const NavigationBar = () => {
 //     <NavContainer>
 //       <NavContent>
 //         <NavBrand to="/">ChurchSoft</NavBrand>
-//         {username && (
-//           <NavLinks>
-//             <li>
-//               <NavLink to="/dashboard">Dashboard</NavLink>
-//             </li>
-//             <li>
-//               <NavLink to="/members">Members</NavLink>
-//             </li>
-//             <li>
-//               <span 
-//                 onClick={() => setDropdownOpen(!$dropdownOpen)} 
-//                 style={{ cursor: 'pointer', color: '#9ca3af' }}
-//               >
-//                 Users
-//               </span>
-//               <DropdownWrapper $isOpen={$dropdownOpen} onMouseLeave={() => setDropdownOpen(false)}>
-//                 <DropdownLink to="/user/listusers">User List</DropdownLink>
-//                 <DropdownLink to="/userpage">User Details</DropdownLink>
-//                 <DropdownLink to="/users">Create User</DropdownLink>
-//               </DropdownWrapper>
-//             </li>
-//             <li>
-//               <NavLink to="/events">Events</NavLink>
-//             </li>
-//           </NavLinks>
+//         {username ? (
+//           <>
+//             <NavLinks>
+//               <li>
+//                 <NavLink to="/dashboard">Dashboard</NavLink>
+//               </li>
+//               <li>
+//                 <span 
+//                   onClick={() => setDropdownOpenMember(!$dropdownOpenMember)} 
+//                   style={{ cursor: 'pointer', color: '#9ca3af' }}
+//                 >
+//                   Members
+//                 </span>
+//                 <DropdownWrapper $isOpen={$dropdownOpenMember} onMouseLeave={() => setDropdownOpenMember(false)}> 
+//                   {role == 'admin' && (
+//                       <>
+//                         <DropdownLink to="/member/listmembers">Member List</DropdownLink>
+//                         <DropdownLink to="/user/listusers">User List</DropdownLink>
+//                       </>
+//                   )}    
+//                   {role == 'Member' && (
+//                     <>
+//                       <DropdownLink to="/memberprofile">Member Profile</DropdownLink>
+//                       <DropdownLink to="/memberregister">Member Registration</DropdownLink>
+//                     </>
+//                   )}
+                  
+//                 </DropdownWrapper>
+//               </li>
+//               <li>
+//                 <span 
+//                   onClick={() => setDropdownOpen(!$dropdownOpen)} 
+//                   style={{ cursor: 'pointer', color: '#9ca3af' }}
+//                 >
+//                   Users
+//                 </span>
+//                 <DropdownWrapper $isOpen={$dropdownOpen} onMouseLeave={() => setDropdownOpen(false)}>
+//                   {role == 'user' && (
+//                     <>                     
+//                       <DropdownLink to="/userpage">User Details</DropdownLink>
+//                       <DropdownLink to="/users">Create User</DropdownLink>
+//                     </>
+//                   )}
+                 
+//                 </DropdownWrapper>
+//               </li>
+
+//               <li>
+//                 <NavLink to="/events">Events</NavLink>
+//               </li>
+//             </NavLinks>
+//             <NavActions>
+//               <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+//             </NavActions>
+//           </>
+//         ) : (
+//           <NavActions>
+//             <Link
+//               to="/login"
+//               className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+//             >
+//               Login
+//             </Link>
+
+//             <Link
+//               to="/memberlogin"
+//               className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+//               onClick={() => console.log("Navigating to Member Login")}
+//             >
+//               Member Login
+//             </Link>
+
+//             {/* <Link
+//               to="/register"
+//               className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+//             >
+//               Register
+//             </Link> */}
+//             {/* <Link
+//               to="/auth/request-password-reset"
+//               className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+//             >
+//               Forgot Password?
+//             </Link> */}
+//           </NavActions>
 //         )}
-//         <NavActions>
-//           {username ? (
-//             <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
-//           ) : (
-//             <>
-//               <Link
-//                 to="/login"
-//                 className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-//               >
-//                 Login
-//               </Link>
-//               <Link
-//                 to="/register"
-//                 className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-//               >
-//                 Register
-//               </Link>
-//             </>
-//           )}
-//         </NavActions>
 //       </NavContent>
 //     </NavContainer>
 //   );
 // };
-
-
-
-
 

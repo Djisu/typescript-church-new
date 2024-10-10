@@ -97,3 +97,20 @@ button:focus-visible {
 .landing-inner {
   text-align: center;           /* Center text within the inner container */
 }
+
+.landing-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+}
+
+.dark-overlay {
+  background: rgba(0, 0, 0, 0.7); /* Optional: Dark overlay */
+  padding: 20px;
+  text-align: center; /* Center text */
+}
+
+.landing-inner {
+  color: white; /* Adjust text color as needed */
+}

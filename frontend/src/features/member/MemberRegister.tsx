@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useAppDispatch } from '../../app/hooks';
 import { createMember } from './memberSlice';
-
 export interface IMember {
   username: string;
   _id?: string;
@@ -9,6 +8,7 @@ export interface IMember {
   lastName: string;
   email: string;
   password: string;
+  role: string;
   phone: string;
   address: string;
   membership_type: string;
@@ -26,6 +26,8 @@ export interface IMember {
 }
 
 const MemberRegister: React.FC = () => {
+  let [message, setMessage] = React.useState<string | null>(null);
+  let [error, setError] = React.useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [userData, setUserData] = useState<Omit<IMember, '_id' | 'createdAt' | 'updatedAt'>>({
@@ -34,6 +36,7 @@ const MemberRegister: React.FC = () => {
     lastName: '',
     email: '',
     password: '',
+    role: '',
     phone: '',
     address: '',
     membership_type: '',
@@ -67,6 +70,7 @@ const MemberRegister: React.FC = () => {
       lastName: (form.lastName as HTMLInputElement).value,
       email: (form.email as HTMLInputElement).value,
       password: (form.password as HTMLInputElement).value,
+      role: (form.role as HTMLInputElement | null)?.value || 'Member', // Defaulting to 'Member'
     }));
 
     // Move to the next step
@@ -99,8 +103,15 @@ const MemberRegister: React.FC = () => {
       if (createMember.rejected.match(result)) {
         addAlert('error', result.payload as string);
         setPasswordError(result.payload as string);
+// sourcery skip: dont-reassign-caught-exceptions
+        error = "Error in creating member"
+        setError(error)
       } else {
         addAlert('success', 'Member registered successfully!');
+
+        message = 'Member registered successfully!'
+        setMessage(message)
+
         setPasswordError(null);
         formRef.current?.reset();
       }
@@ -111,7 +122,7 @@ const MemberRegister: React.FC = () => {
   };
 
   return (
-    <div>
+    <section>
       <h1>Member Registration</h1>
       {step === 1 ? (
         <form onSubmit={handleInitialSubmit} ref={formRef}>
@@ -140,6 +151,9 @@ const MemberRegister: React.FC = () => {
             <input type="password" id="confirmPassword" className="form-control" name="confirmPassword" required autoComplete="confirmPassword" />
             {passwordError && <div style={{ color: 'red' }}>{passwordError}</div>}
           </div>
+          <div className="mb-3">
+            <input type="hidden" id="role" className="form-control" name="role" value="Member" required  />
+          </div>
           <button type="submit" className="btn btn-primary">Next</button>
         </form>
       ) : (
@@ -166,9 +180,11 @@ const MemberRegister: React.FC = () => {
             <input type="text" id="affiliated" className="form-control" name="affiliated" required autoComplete="affiliated" />
           </div>
           <button type="submit" className="btn btn-primary">Complete Registration</button>
+          {message && <p style={{ color: 'green' }}>{message}</p>}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
       )}
-    </div>
+    </section>
   );
 };
 
