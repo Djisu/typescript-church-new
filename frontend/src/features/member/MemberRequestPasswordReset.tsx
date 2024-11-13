@@ -5,6 +5,8 @@ import { AppDispatch } from '../../app/store';
 import { memberRequestPasswordReset } from './memberSlice';
 
 export const MemberRequestPasswordReset: React.FC = () => {
+   console.log('in MemberRequestPasswordReset')
+
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

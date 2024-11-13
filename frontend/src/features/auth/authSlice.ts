@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-//import { useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import { RootState } from '../../app/store';
-//import useAlerts from '../../components/useAlerts';
 
 interface User {
   id: string;
@@ -56,6 +54,8 @@ const initialState: AuthState = {
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || 
 (import.meta.env.MODE === 'development' ? 'http://localhost:3000' : 'https://typescript-church-new.onrender.com');
+
+console.log('in authSlice.ts')
 
 console.log('BASE_URL:', BASE_URL);
 

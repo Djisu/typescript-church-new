@@ -11,7 +11,7 @@
       "emitDecoratorMetadata": true,
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      "typeRoots": ["@types", "node_modules/@types"],
+      "typeRoots": ["src/@types", "node_modules/@types"],
       "types": ["node", "express", "multer"]
     },
     "include": ["src/**/*", "src/types.d.ts"],

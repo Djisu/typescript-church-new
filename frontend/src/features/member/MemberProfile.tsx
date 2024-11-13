@@ -3,59 +3,6 @@ import { useAppDispatch } from '../../app/hooks';
 import { findAllMembers, updateMember } from './memberSlice';
 import { IMember } from './memberSlice';
 
-// interface ChurchMember {
-//   id?: string;
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   phone: string;
-//   address: string;
-//   membership_type: string;
-//   affiliated: string;
-//   password: string;
-//   role: string;
-//   avatar?: File;
-//   status: 'pending_approval' | 'approved' | 'rejected';
-//   createdAt?: string;
-//   updatedAt?: string;
-// }
-
-// export interface IMemberNew {
-//   username: string;
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   phone: string;
-//   dob: string;
-//   address: string;
-//   membershipType: string;
-//   affiliated: string;
-//   password: string;
-//   confirmPassword: string;
-//   role: string;
-//   avatar: string;
-// }
-
-// const password = (form.password as HTMLInputElement)?.value || '';
-// const role = (form.role as HTMLInputElement | null)?.value || 'Member'; // Defaulting to 'Member'
-// const confirmPassword = (form.confirmPassword as HTMLInputElement)?.value || '';
-// const photo = form.photo as HTMLInputElement;
-
-// interface MembeData extends Omit<ChurchMember, "_id" | "createdAt" | "updatedAt">, Omit<IMember, "_id" | "createdAt" | "updatedAt"> {
-//   username: string;
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   password: string;
-//   role: string;
-//   phone: string;
-//   address: string;
-//   membership_type: string;
-//   status: string;
-//   affiliated: string; 
-//   avatar: string
-// }
-
 const MemberProfile: React.FC = () => {
   const dispatch = useAppDispatch();
   let [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -79,7 +26,7 @@ const MemberProfile: React.FC = () => {
     if (selectedMemberId) {
       const member = members?.find((member: IMember) => member._id === selectedMemberId);
       if (member) {
-        userName = member.username || ''
+        userName = member.userName || ''
         setUserName(userName);
 
         firstName = member.firstName || ''
@@ -144,9 +91,11 @@ const MemberProfile: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const memberEmail = localStorage.getItem('email');
+
     const form = e.target as HTMLFormElement;
 
-    const username = (form.username as HTMLInputElement)?.value || '';
+    const userName = (form.username as HTMLInputElement)?.value || '';
     const firstName = (form.firstName as HTMLInputElement)?.value || '';
     const lastName = (form.lastName as HTMLInputElement)?.value || '';
     const email = (form.email as HTMLInputElement)?.value || '';
@@ -157,6 +106,12 @@ const MemberProfile: React.FC = () => {
     const password = (form.password as HTMLInputElement)?.value || '';
     const role = (form.role as HTMLInputElement | null)?.value || 'Member'; // Defaulting to 'Member'
     const confirmPassword = (form.confirmPassword as HTMLInputElement)?.value || '';
+
+    //compare emails
+    if (email !== memberEmail) {
+      addAlert('error', 'You are not authorized to update this member');
+      return;
+    } 
 
     // Compare passwords
     if (password !== confirmPassword) {
@@ -171,8 +126,19 @@ const MemberProfile: React.FC = () => {
       return;
     }
 
+    const token = localStorage.getItem('token');
+    if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const exp = payload.exp * 1000; // Convert to milliseconds
+        const isExpired = Date.now() > exp;
+    
+        console.log('Token expired:', isExpired);
+    } else {
+        console.log('No token found');
+    }
+
     const memberData: IMember = {
-      username,
+      userName,
       firstName,
       lastName,
       email,
@@ -222,23 +188,12 @@ const MemberProfile: React.FC = () => {
             <option value="">Select a member</option>
             {members && members.map((member: IMember) => (
               <option key={member._id} value={member._id}>
-                {member.username}
+                {member.userName}
               </option>
             ))}
           </select>
         </div>
-        {/* username: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        password: string;
-        role: string;
-        phone: string;
-        address: string;
-        membership_type: string;
-        status: string;
-        affiliated: string; 
-        photo: string */}
+        
         <div className="mb-3">
           <label htmlFor="username" className="form-label">User Name:</label>
           <input type="text" id="username" className="form-control" name="username" required autoComplete="username" />

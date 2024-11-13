@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from '../../axiosInstance';
 import axios from 'axios';
 
 export interface IEvent {
@@ -31,11 +32,38 @@ const BASE_URL = import.meta.env.VITE_BASE_URL || (import.meta.env.MODE === 'dev
 export const createEvent = createAsyncThunk<IEvent, Omit<IEvent, '_id' | 'createdAt' | 'updatedAt'>, { rejectValue: string }>(
   'events/createEvent',
   async (newEvent, { rejectWithValue }) => {
-    try {
-      const response = await axios.post<IEvent>(`${BASE_URL}/api/events`, newEvent);
+    try {      
+      const response = await axiosInstance.post<IEvent>(`${BASE_URL}/api/events/create`, JSON.stringify(newEvent), {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+      });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const registerMember = createAsyncThunk(
+  'members/register',
+  async (registrationData: { memberId: string; eventId: string; registeredAt: string }, { rejectWithValue }) => {
+    try {
+      // Using axios for the API call
+      const response = await axiosInstance.post(`${BASE_URL}/api/events/register`, registrationData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Return the data directly from the response
+      return response.data; // Assuming the response data contains the necessary information
+    } catch (error: any) {
+      // Handle any errors that occur during the request
+      if (axios.isAxiosError(error) && error.response) {
+        return rejectWithValue(error.response.data.message || 'Failed to register member');
+      }
+      return rejectWithValue('Failed to register member');
     }
   }
 );
@@ -45,7 +73,7 @@ export const updateEvent = createAsyncThunk<IEvent, Partial<Omit<IEvent, 'create
   async (updatedEvent, { rejectWithValue }) => {
     try {
       const { _id, ...rest } = updatedEvent;
-      const response = await axios.put<IEvent>(`${BASE_URL}/api/events/${_id}`, rest);
+      const response = await axiosInstance.put<IEvent>(`${BASE_URL}/api/events/${_id}`, rest);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -57,7 +85,7 @@ export const deleteEvent = createAsyncThunk<string, string, { rejectValue: strin
   'events/deleteEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      await axios.delete(`${BASE_URL}/api/events/${eventId}`);
+      await axiosInstance.delete(`${BASE_URL}/api/events/${eventId}`);
       return eventId;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -69,7 +97,7 @@ export const searchEvents = createAsyncThunk<IEvent[], Partial<IEvent>, { reject
   'events/searchEvents',
   async (searchParams, { rejectWithValue }) => {
     try {
-      const response = await axios.get<IEvent[]>(`${BASE_URL}/api/events`, { params: searchParams });
+      const response = await axiosInstance.get<IEvent[]>(`${BASE_URL}/api/events`, { params: searchParams });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);

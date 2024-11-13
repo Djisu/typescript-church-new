@@ -109,7 +109,7 @@ export const NavigationBar = () => {
   const navigate = useNavigate();
 
   const username = useAppSelector((state: RootState) => state.auth.user?.username || '');
-  const memberUsername = useAppSelector((state: RootState) => state.members.currentMember?.username || '');
+  const memberUsername = useAppSelector((state: RootState) => state.members.currentMember?.userName || '');
 
   const role = useAppSelector((state: RootState) => state.members.currentMember?.role || '');
   const userRole = useAppSelector((state: RootState) => state.auth.user?.role || '');
@@ -194,7 +194,7 @@ export const NavigationBar = () => {
         ) : (
           <NavActions>
             <Link to="/login" className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-              Login
+              User Login
             </Link>
             <Link to="/memberlogin" className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
               Member Login

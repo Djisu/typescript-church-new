@@ -21,8 +21,8 @@ export interface IMember extends Document {
   ministries: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
-  verificationToken: string;
-  isVerified: Boolean;
+  verificationToken?: string;
+  isVerified?: Boolean;
   token?: string | null;
   resetToken?: string | null; // Add this line
   resetTokenExpiration?: Date | null; // Add this line

@@ -10,23 +10,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
-let frontendUrl = ""; //process.env.FRONTEND_URL; // Access the environment variable
+let frontendUrl = "";
 const nodeEnv = process.env.NODE_ENV;
 if (nodeEnv === 'development') {
-    frontendUrl = "http://localhost:3000";
+    frontendUrl = "http://localhost:5173";
 }
 else if (nodeEnv === 'production') {
-    frontendUrl = "https://church-management-frontend.onrender.com";
+    frontendUrl = "https://typescript-church-new.onrender.com";
 }
 else {
     console.log('Invalid node environment variable');
 }
 const appPassword = process.env.APP_PASSWORD;
 const emailUser = process.env.EMAIL_USER;
-export const sendResetEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(' in sendResetEmail');
-    console.log('Email User:', emailUser);
-    console.log('App Password:', appPassword);
+export const sendResetEmailUser = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(' in sendResetEmailUser');
+    // console.log('Email User:', emailUser);
+    // console.log('App Password:', appPassword);
+    console.log('nodeEnv: ', nodeEnv);
+    console.log('Frontend URL:', frontendUrl);
     const transport = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -35,7 +37,7 @@ export const sendResetEmail = (email, token) => __awaiter(void 0, void 0, void 0
         }
     });
     // Construct the email contents
-    const resetUrl = `${frontendUrl}/reset-password?token=${token}?env=${nodeEnv}`;
+    const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}&env=${nodeEnv}`;
     const mailOptions = {
         from: `"Typescript Church" <${emailUser}>`, // Sender address
         to: email, // List of recipients
@@ -53,4 +55,4 @@ export const sendResetEmail = (email, token) => __awaiter(void 0, void 0, void 0
         throw new Error('Could not send reset email');
     }
 });
-//# sourceMappingURL=email.js.map
+//# sourceMappingURL=emailUser.js.map

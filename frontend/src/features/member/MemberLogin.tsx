@@ -4,12 +4,7 @@ import { useAppDispatch } from '../../app/hooks'
 import { MemberLoginResponse, memberLogin } from './memberSlice'
 import './Login.css'; 
 
-// interface FormElements extends HTMLFormControlsCollection {
-//   usernameInput: HTMLInputElement
-// }
-// interface UsernameFormElement extends HTMLFormElement {
-//   readonly elements: FormElements
-// }
+
 interface MemberLoginPageFormFields extends HTMLFormControlsCollection {
   email: HTMLInputElement,
   password: HTMLInputElement,
@@ -17,13 +12,6 @@ interface MemberLoginPageFormFields extends HTMLFormControlsCollection {
 interface MemberLoginPageFormElements extends HTMLFormElement {
   readonly elements: MemberLoginPageFormFields
 }
-
-// interface MemberLoginPayload {
-//   token: string;         
-//   message: string;      
-//   email: string;        
-//   password: string;     
-// }
 
 export const MemberLogin = () => {
 
@@ -62,7 +50,7 @@ export const MemberLogin = () => {
         // Store member details in localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('id', member._id?.toString() || '');
-        localStorage.setItem('username', member.username);
+        localStorage.setItem('username', member.userName);
         localStorage.setItem('email', member.email);
         localStorage.setItem('role', member.role);
         

@@ -9,41 +9,46 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import express from 'express';
 import { Member } from '../../../models/Members.js';
-//import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
-//import  nodemailer, { createTransport, SendMailOptions, SentMessageInfo } from 'nodemailer';
 import nodemailer from 'nodemailer';
 import { check, validationResult } from 'express-validator';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import { sendResetEmailMember } from '../../utils/emailMember.js';
+import authenticateJWT from '../../utils/authenticateJWT.js';
 import config from '../../utils/config.js';
-import { sendResetEmail } from '../../utils/email.js';
 import dotenv from 'dotenv';
 dotenv.config();
-const frontendUrl = process.env.FRONTEND_URL; // Access the environment variable
+let frontendUrl = ""; //process.env.FRONTEND_URL; // Access the environment variable
 const emailPassword = process.env.EMAIL_PASS;
 const appPassword = process.env.APP_PASSWORD;
 const emailUser = process.env.EMAIL_USER;
+const port = process.env.PORT || 3001;
+const nodeEnv = process.env.NODE_ENV;
+if (nodeEnv === 'development') {
+    frontendUrl = "http://localhost:5173";
+}
+else if (nodeEnv === 'production') {
+    frontendUrl = "https://typescript-church-new.onrender.com";
+}
+else {
+    console.log('Invalid node environment variable'); //.slice()
+}
 const router = express.Router();
 const transport = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: emailUser,
-        pass: appPassword //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD'
+        pass: appPassword //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD', 
     }
 });
-// const transport = nodemailer.createTransport({
-//     host: "sandbox.smtp.mailtrap.io",
-//     port: 2525,
-//     auth: {
-//         user: "a601af2b4b131b",
-//         pass: "e260293c2a30e8"
-//     }
-// });
+//   router.get('/reset-password', (req, res) => {
+//     res.status(200).json({ message: 'Welcome to the API!' });
+//   });  
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
 ], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('Route member /login');
     const errors = validationResult(req);
@@ -57,6 +62,10 @@ router.post('/login', [
             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
             return;
         }
+        if (!member.isVerified) {
+            res.status(400).json({ errors: [{ msg: 'Please verify your email first' }] });
+            return;
+        }
         if (member) {
             console.log('member found!!');
             const isMatch = yield member.comparePassword(password);
@@ -64,6 +73,7 @@ router.post('/login', [
                 res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
                 return;
             }
+            console.log('password match!!');
             const payload = {
                 member: {
                     id: member._id,
@@ -72,8 +82,12 @@ router.post('/login', [
                     role: member.role
                 }
             };
-            const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 360000 });
+            console.log('Payload before signing:', payload);
+            console.log('config.jwtSecret: ', config.jwtSecret);
+            const token = jwt.sign(payload, config.jwtSecret, { expiresIn: '1h' });
+            console.log('Generated token:', token);
             // Send success response
+            console.log({ token, member });
             res.json({ token, member });
         }
     }
@@ -84,30 +98,59 @@ router.post('/login', [
 }));
 // Reset password
 router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('in backend /request-password-reset');
+    console.log('in backend Member.ts /request-password-reset');
     const { email } = req.body;
     console.log('email: ', email);
     const member = yield Member.findOne({ email });
     if (!member) {
-        res.status(404).json({ message: 'Email not found.' });
+        res.status(404).json({ message: 'Member Email not found.' });
     }
     const token = crypto.randomBytes(32).toString('hex'); // Generate token
+    console.log('token generated: ', token);
     if (member) {
+        // Clear existing reset token and expiration if it exists
+        if (member.resetToken) {
+            member.resetToken = undefined; // Clear the existing token
+            member.resetTokenExpiration = undefined; // Clear the existing expiration
+        }
+        console.log('after member token reset');
+        // Generate a new token
+        const token = crypto.randomBytes(32).toString('hex'); // Ensure to generate a new token
+        // Assign the new token and set the expiration time
         member.resetToken = token; // Save token to member record
-        member.resetTokenExpiration = new Date(Date.now() + 3600000); // 1 hour expiration
+        member.resetTokenExpiration = new Date(Date.now() + 25200000); // 7 hours expiration
         yield member.save();
         console.log('after member token reset');
-        yield sendResetEmail(email, token); // Function to send email
+        yield sendResetEmailMember(email, token); // Function to send email
         res.status(200).json({ message: 'Password reset email sent.' });
     }
 }));
 // Password reset
 router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // console.log('in Member.ts /reset-password')
     const { token, newPassword } = req.body;
+    console.log('in BACKEND Member.ts  /reset-password', token, newPassword);
+    const isValidTokenFormat = (token) => /^[a-f0-9]{64}$/.test(token); // Adjust regex based on token length
+    if (!isValidTokenFormat(token)) {
+        res.status(400).json({ message: 'Invalid token format.' });
+        return;
+    }
+    const memberCheck = yield Member.findOne({ resetToken: token });
+    if (!memberCheck) {
+        res.status(400).json({ message: 'Token not found.' });
+        return;
+    }
+    //compare memberCheck to token
+    if (memberCheck.resetToken !== token) {
+        res.status(400).json({ message: 'Token does not match.' });
+        return;
+    }
+    console.log('after token check');
     const member = yield Member.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
     if (!member) {
         res.status(400).json({ message: 'Invalid or expired token.' });
     }
+    console.log('after member check');
     // Validate new password (e.g., length, complexity)
     if (newPassword.length < 6) {
         res.status(400).json({ message: 'Password must be at least 6 characters long.' });
@@ -116,8 +159,8 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
     const salt = yield bcrypt.genSalt(10);
     if (member) {
         member.password = yield bcrypt.hash(newPassword, salt);
-        member.resetToken = undefined; // Clear the token
-        member.resetTokenExpiration = undefined; // Clear expiration
+        member.resetToken = undefined;
+        member.resetTokenExpiration = undefined;
         yield member.save();
         res.status(200).json({ message: 'Password has been reset successfully.' });
     }
@@ -137,38 +180,46 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
 router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('in create member ');
     console.log('Incoming request body:', req.body);
+    console.log('port:', port);
     try {
-        let { firstName, lastName, email, password, username, role } = req.body;
+        let { firstName, lastName, email, password, userName, role } = req.body;
         // Check if the user already exists
         const existingUser = yield Member.findOne({ email });
         if (existingUser) {
+            console.log('User already exists');
             res.status(400).json({ message: 'User already exists' });
+            return;
         }
+        console.log('about to generate verification token');
         // Create a verification token
         const verificationToken = crypto.randomBytes(32).toString('hex');
-        // Hash the password before saving
-        const hashedPassword = yield bcrypt.hash(password, 10);
+        // Hash the password
+        const salt = yield bcrypt.genSalt(10);
+        const hashedPassword = yield bcrypt.hash(password, salt);
+        console.log('hashedPassword generated');
         // Create initial member data
         const initialMemberData = {
+            userName,
             firstName,
             lastName,
             email,
             password: hashedPassword,
             role,
-            username,
-            status: req.body.status || 'pending approval',
-            joinedDate: req.body.joinedDate || new Date(),
-            verificationToken,
-            affiliated: req.body.affiliated || null,
-            membership_type: req.body.membership_type || null,
             phone: req.body.phone || null,
             address: req.body.address || null,
+            membership_type: req.body.membership_type || null,
+            status: req.body.status || 'pending approval',
+            affiliated: req.body.affiliated || null,
+            joinedDate: req.body.joinedDate || new Date(),
+            verificationToken,
+            isVerified: false,
         };
         // Create and save the new member
         const newMember = new Member(initialMemberData);
         yield newMember.save();
-        // Send verification email
-        const verificationLink = `http://localhost:${process.env.PORT}/verify/${verificationToken}`;
+        console.log('new member created');
+        // Send verification email frontendUrl
+        const verificationLink = `${frontendUrl}/verify-email/${verificationToken}?env=${nodeEnv}`;
         const mailOptions = {
             from: process.env.EMAIL_USER || 'no-reply@example.com',
             to: email,
@@ -176,14 +227,15 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
             text: `Please verify your email by clicking on the following link: ${verificationLink}`,
             html: `<p>Please verify your email by clicking on the following link: <a href="${verificationLink}">${verificationLink}</a></p>`,
         };
+        console.log('about to send verification email');
         transport.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Error sending email:', error);
-                res.status(500).json({ message: 'Error sending email' });
+                return res.status(500).json({ message: 'Error sending email' });
             }
             console.log('Email sent successfully:', info);
+            return res.status(201).json({ message: 'User not registered yet. Check your email for verification.' });
         });
-        res.status(201).json({ message: 'User registered. Check your email for verification.' });
     }
     catch (error) {
         console.error('Error:', error);
@@ -231,17 +283,36 @@ router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
  * @param {Object} req.body - The updated member data.
  * @returns {IMember} 200 - The updated member object.
  * @returns {Error} 404 - Member not found.
- * @returns {Error} 400 - Validation error.
+ * @returns {Error} 400 - Validation error.authenticateJWT,
  */
-router.put('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:memberId', authenticateJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('backend in update member');
+    console.log('Incoming request body:', req.body);
+    console.log('req.params.memberId:', req.params.memberId);
+    // Example role check
+    if (req.body.role !== 'Member') {
+        console.log('member role is not Member');
+        res.sendStatus(403); // Forbidden if the user is not authorized
+        return;
+    }
+    console.log('member role is Member');
     try {
-        const member = yield Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
-        if (!member) {
+        console.log('about to check for member existence');
+        // First, check if the member exists
+        const existingMember = yield Member.findById(req.params.memberId);
+        console.log('after checking for member existence', existingMember);
+        if (!existingMember) {
             res.status(404).json({ message: 'Member not found' });
+            return; // Exit if the member doesn't exist
         }
-        res.json(member);
+        // Now proceed to update the member
+        console.log('about to update member');
+        const updatedMember = yield Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
+        console.log('Updated member:', updatedMember);
+        res.json(updatedMember);
     }
     catch (error) {
+        console.error('Update error:', error); // Log the error
         res.status(400).json({ message: error.message });
     }
 }));
@@ -639,6 +710,28 @@ router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, 
     }
     catch (error) {
         res.status(500).json({ message: error.message });
+    }
+}));
+router.get('/verify/:token', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token } = req.params;
+    console.log('in verify/:token');
+    try {
+        // Find the member by verification token
+        const member = yield Member.findOne({ verificationToken: token });
+        if (!member) {
+            res.status(404).json({ message: 'Invalid verification token' });
+            return;
+        }
+        // Update member status to verified
+        member.status = 'verified'; // or whatever your verified status is
+        member.verificationToken = undefined; // Clear the token
+        member.isVerified = true; // Set the isVerified flag to true
+        yield member.save();
+        res.status(200).json({ message: 'Email verified successfully!' });
+    }
+    catch (error) {
+        console.error('Error during verification:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 }));
 export default router;

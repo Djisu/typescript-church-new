@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
+import axiosInstance from '../../axiosInstance';
 
 export interface IMember {
     _id?: string;
-    username: string;
+    userName: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -24,12 +25,6 @@ export interface IMember {
     updatedAt?: Date;
 }
 
-// interface Member {
-//     id: string;
-//     username: string;
-//     email: string;
-//     role: string;
-// }
 
 export interface MemberLoginResponse {
     token: string;
@@ -71,10 +66,14 @@ const initialState: MemberState = {
 };
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3000' : 'https://typescript-church-new.onrender.com');
+//const BASE_URL = import.meta.env.VITE_BASE_URL || (import.meta.env.MODE === 'development' ? 'http://localhost:3000' : 'https://typescript-church-new.onrender.com');
+
 
 export const createMember = createAsyncThunk<IMember, Omit<IMember, '_id' | 'createdAt' | 'updatedAt'>>(
     'member/create',
     async (memberData) => {
+        console.log('in createMember', memberData);
+
         const response = await axios.post(`${BASE_URL}/api/members/create`, JSON.stringify(memberData), {
             headers: {
                 'Content-Type': 'application/json',
@@ -89,7 +88,10 @@ export const memberLogin = createAsyncThunk<MemberLoginResponse, { email: string
     async (credentials, { rejectWithValue }) => {
         try {
             console.log('in member/memberLogin memberSlice',credentials);
+            
             const response = await axios.post(`${BASE_URL}/api/members/login`, credentials);
+            console.log('after memberLogin response',response);
+            
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('isAuthenticated', 'true');
 
@@ -118,8 +120,10 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 export const memberRequestPasswordReset = createAsyncThunk<RequestPasswordResponse, string, { rejectValue: RequestPasswordError }>(
     'auth/memberRequestPasswordReset',
     async (email: string, { rejectWithValue }) => {
+        console.log('in memberSlice memberRequestPasswordReset', email);
+        
         try {
-            await axios.post(`${BASE_URL}/api/auth/request-password-reset`, { email });
+            await axios.post(`${BASE_URL}/api/members/request-password-reset`, { email });
             return { message: 'Password reset email sent.' };
         } catch (error: any) {
             return rejectWithValue({ message: error.response?.data?.message || 'An error occurred.' });
@@ -128,21 +132,24 @@ export const memberRequestPasswordReset = createAsyncThunk<RequestPasswordRespon
 );
 
 export const memberResetPassword = createAsyncThunk<ResetPasswordResponse, { token: string; newPassword: string }, { rejectValue: ResetPasswordError }>(
-    'auth/resetPassword',
+    'member/resetPassword',
     async ({ token, newPassword }, { rejectWithValue }) => {
-        try {
-            await axios.post(`${BASE_URL}/api/auth/reset-password`, { token, newPassword });
-            return { message: 'Password has been reset successfully.' };
-        } catch (error: any) {
-            return rejectWithValue({ message: error.response?.data?.message || 'An error occurred.' });
-        }
+      console.log('in resetPassword')
+
+      try {
+        await axios.post(`${BASE_URL}/api/members/reset-password`, { token, newPassword });
+       
+        return { message: 'Password has been reset successfully.' };
+      } catch (error: any) {
+        return rejectWithValue({ message: error.response?.data?.message || 'An error occurred.' });
+      }
     }
-);
+  );
 
 export const deleteMember = createAsyncThunk<string, string>(
     'member/delete',
     async (memberId) => {
-        await axios.delete(`${BASE_URL}/api/members/${memberId}`);
+        await axiosInstance.delete(`${BASE_URL}/api/members/${memberId}`);
         return memberId;
     }
 );
@@ -150,7 +157,7 @@ export const deleteMember = createAsyncThunk<string, string>(
 export const findMember = createAsyncThunk<IMember, string>(
     'member/get',
     async (memberId) => {
-        const response = await axios.get(`${BASE_URL}/api/members/${memberId}`);
+        const response = await axiosInstance.get(`${BASE_URL}/api/members/${memberId}`);
         return response.data;
     }
 );
@@ -158,20 +165,33 @@ export const findMember = createAsyncThunk<IMember, string>(
 export const updateMember = createAsyncThunk<IMember, { id: string; data: Omit<IMember, '_id' | 'createdAt' | 'updatedAt'> }>(
     'member/update',
     async (params) => {
+        console.log('In updateMember', params);
+
+        const token = localStorage.getItem('token');
+        console.log('Token:', token);
+
         const { id, data } = params;
-        const response = await axios.put(`${BASE_URL}/api/members/${id}`, JSON.stringify(data), {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        return response.data;
+
+        try {
+            const response = await axiosInstance.put(`${BASE_URL}/api/members/${id}`, JSON.stringify(data), {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // This will also be set in the interceptor
+                },
+            });
+            console.log('in frontend: member updated: ', response.data)
+            return response.data;
+        } catch (error: any) {
+            console.error('Error updating member:', error.response ? error.response.data : error.message);
+            throw error; // Rethrow to handle in slice
+        }
     }
 );
 
 export const findAllMembers = createAsyncThunk<IMember[]>(
     'member/findAllMembers',
     async () => {
-        const response = await axios.get(`${BASE_URL}/api/members`);
+        const response = await axiosInstance.get(`${BASE_URL}/api/members`);
         return response.data;
     }
 );
@@ -180,7 +200,7 @@ export const recordAttendance = createAsyncThunk<any, { memberId: string; date: 
     'member/recordAttendance',
     async (data) => {
         const { memberId, date, attended } = data;
-        const response = await axios.post(`${BASE_URL}/api/members/${memberId}/attendance`, { date, attended });
+        const response = await axiosInstance.post(`${BASE_URL}/api/members/${memberId}/attendance`, { date, attended });
         return response.data;
     }
 );

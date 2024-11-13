@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../../app/store';
+import axiosInstance from '../../axiosInstance';
 
 export interface IUser {
     _id: string;
@@ -62,7 +63,7 @@ export const updateUserProfile = createAsyncThunk<IUser, Partial<Omit<IUser, '_i
 export const findAllUsers = createAsyncThunk<IUser[]>(
   'user/findAllUsers',
   async () => {
-    const response = await axios.get(`${BASE_URL}/api/users`);
+    const response = await axiosInstance.get(`${BASE_URL}/api/users`);
     return response.data;
   }
 );
@@ -75,7 +76,8 @@ export const findUser = createAsyncThunk<IUser, string | null>(
       throw new Error('User ID is required');
     }
 
-    const response = await axios.get(`${BASE_URL}/api/users/${userId}`);
+    console.log('in findUser thunk')
+    const response = await axiosInstance.get(`${BASE_URL}/api/users/${userId}`);
     return response.data;
   }
 );

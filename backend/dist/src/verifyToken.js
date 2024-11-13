@@ -4,19 +4,25 @@ const verifyToken = (req, res, next) => {
     var _a;
     const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(' ')[1];
     if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
+        res.status(401).json({ message: 'No token provided' });
+        return;
     }
     try {
         const decoded = jwt.verify(token, 'your-secret-key');
-        req.user = decoded; // Type assertion to ensure the decoded object matches the IUser interface
+        // Create a user object that matches the AuthenticatedUser interface
+        req.user = {
+            id: decoded.id, // Assuming `id` is included in the token payload
+            username: decoded.username,
+            email: decoded.email,
+            role: decoded.role,
+            avatar: decoded.avatar || '', // Provide a default value if needed
+        }; // Type assertion
         next();
     }
     catch (error) {
-        return res.status(403).json({ message: 'Failed to authenticate token' });
+        res.status(403).json({ message: 'Failed to authenticate token' });
+        return;
     }
 };
-// Example of a protected route
-// app.get('/protected', verifyToken, (req: Request, res: Response) => {
-//   res.json({ message: 'This is a protected route' });
-// });
+export default verifyToken;
 //# sourceMappingURL=verifyToken.js.map

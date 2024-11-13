@@ -30,14 +30,14 @@ const Landing: React.FC<IProps> = ({ isAuthenticated }) => {
           <h1 className="x-large">ChurchSoft</h1>
           <p className="lead">Follow Jesus.</p>
           <div className="buttons">
-            <Link to="/register" className="btn btn-primary">
+            {/* <Link to="/register" className="btn btn-primary">
               Sign Up
-            </Link>
+            </Link> */}
             <Link to="/memberlogin" className="btn btn-primary">
               Member Login
             </Link>
             <Link to="/login" className="btn btn-primary">
-              Login
+              User Login
             </Link>
           </div>
         </div>

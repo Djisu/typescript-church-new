@@ -20,6 +20,8 @@ import path from 'path';
 import morgan from 'morgan';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname } from 'path';
+//import mongoose from'mongoose';
+//import authenticateJWT from './utils/authenticateJWT.js';
 mongoose.set('strictQuery', false);
 mongoose.set('debug', true);
 // Load environment variables from .env file
@@ -39,24 +41,26 @@ console.log('ABOUT TO CONNECT');
 mongoose.connect(dbURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 20000, // Increase timeout to 20 seconds
+    socketTimeoutMS: 45000 // Close sockets after 45 seconds of inactivity
 }).then(() => {
     console.log('MongoDB connected');
 }).catch(err => {
     console.error('MongoDB connection error:', err);
 });
-// const allowedOrigins = [
-//     'https://church-management-frontend.onrender.com',
-//     'https://typescript-church-new.onrender.com',
-//     'http://localhost:5173' // Allow local development
-// ];
-// // Use CORS middleware
-// app.use(cors({
-//     origin: allowedOrigins,
-//     methods: ['GET', 'POST', 'OPTIONS'], // Specify allowed methods
-//     allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-//     credentials: true, // Allow credentials such as cookies
-// }));
-app.use(cors({ origin: 'https://church-management-frontend.onrender.com' }));
+const allowedOrigins = [
+    'https://typescript-church-new.onrender.com', // Production
+    'http://localhost:3000', // Local development
+    'http://localhost:5173', // Local development
+];
+// Use CORS middleware
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    credentials: true // Allow credentials such as cookies
+}));
+//app.use(cors({ origin: 'https://church-management-frontend.onrender.com' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Define routes
@@ -73,7 +77,9 @@ app.get('/', (req, res) => {
 // Serve static files from the frontend build directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = pathDirname(__filename);
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+const frontendPath = '/Users/pauljesufleischer/typescript-church/frontend/dist';
+app.use(express.static(frontendPath));
+//app.use(express.static(path.join(__dirname, '../frontend/dist')));
 // Set up multer storage
 const storage = diskStorage({
     destination: (req, file, cb) => {
@@ -102,7 +108,7 @@ app.use((err, req, res, next) => {
 app.use(morgan('dev'));
 // Catch-all route to serve the frontend application
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 // Start the server
 //const port = process.env.PORT || 3000;

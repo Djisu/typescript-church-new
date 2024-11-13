@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useAppDispatch } from '../../app/hooks';
+//import { useNavigate } from 'react-router-dom';
 import { createMember } from './memberSlice';
 export interface IMember {
-  username: string;
+  userName: string;
   _id?: string;
   firstName: string;
   lastName: string;
@@ -31,7 +32,7 @@ const MemberRegister: React.FC = () => {
   const [step, setStep] = useState(1);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [userData, setUserData] = useState<Omit<IMember, '_id' | 'createdAt' | 'updatedAt'>>({
-    username: '',
+    userName: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -52,6 +53,8 @@ const MemberRegister: React.FC = () => {
   });
   
   const dispatch = useAppDispatch();
+  //const navigate = useNavigate();
+
   const formRef = useRef<HTMLFormElement>(null);
 
   const addAlert = (type: 'success' | 'error', message: string) => {
@@ -65,7 +68,7 @@ const MemberRegister: React.FC = () => {
     // Set userData from form fields
     setUserData((prevData) => ({
       ...prevData,
-      username: (form.username as HTMLInputElement).value,
+      userName: (form.username as HTMLInputElement).value,
       firstName: (form.firstName as HTMLInputElement).value,
       lastName: (form.lastName as HTMLInputElement).value,
       email: (form.email as HTMLInputElement).value,
@@ -84,7 +87,8 @@ const MemberRegister: React.FC = () => {
     const phone = (form.phone as HTMLInputElement).value;
     const address = (form.address as HTMLInputElement).value;
     const membership_type = (form.membership_type as HTMLSelectElement).value;
-    const affiliated = (form.affiliated as HTMLInputElement).value;
+    const affiliated = (form.affiliated as HTMLSelectElement)?.value || '';
+    // affiliated = (form.affiliated as HTMLInputElement).value;
 
     const finalData = {
       ...userData,
@@ -98,12 +102,14 @@ const MemberRegister: React.FC = () => {
     };
 
     try {
+      console.log('finalData: ', finalData)
       const result = await dispatch(createMember(finalData));
 
       if (createMember.rejected.match(result)) {
         addAlert('error', result.payload as string);
         setPasswordError(result.payload as string);
-// sourcery skip: dont-reassign-caught-exceptions
+
+  // sourcery skip: dont-reassign-caught-exceptions
         error = "Error in creating member"
         setError(error)
       } else {
@@ -114,6 +120,8 @@ const MemberRegister: React.FC = () => {
 
         setPasswordError(null);
         formRef.current?.reset();
+
+        //navigate("/landing");
       }
     } catch (error) {
       addAlert('error', 'An error occurred during registration');
@@ -126,10 +134,10 @@ const MemberRegister: React.FC = () => {
       <h1>Member Registration</h1>
       {step === 1 ? (
         <form onSubmit={handleInitialSubmit} ref={formRef}>
-        <div className="mb-3">
-          <label htmlFor="username" className="form-label">User Name:</label>
-          <input type="text" id="username" className="form-control" name="username" required autoComplete="username" />
-        </div>
+          <div className="mb-3">
+            <label htmlFor="username" className="form-label">User Name:</label>
+            <input type="text" id="username" className="form-control" name="username" required autoComplete="username" />
+          </div>  
           <div className="mb-3">
             <label htmlFor="firstName" className="form-label">First Name:</label>
             <input type="text" id="firstName" className="form-control" name="firstName" required autoComplete="firstName" />
@@ -143,11 +151,11 @@ const MemberRegister: React.FC = () => {
             <input type="email" id="email" className="form-control" name="email" required autoComplete="email" />
           </div>
           <div className="mb-3">
-            <label htmlFor="password">Password:</label>
+            <label htmlFor="password" className="form-label">Password:</label>
             <input type="password" id="password" className="form-control" name="password" required autoComplete="password" />
           </div>
           <div className="mb-3">
-            <label htmlFor="confirmPassword">Confirm Password:</label>
+            <label htmlFor="confirmPassword" className="form-label">Confirm Password:</label>
             <input type="password" id="confirmPassword" className="form-control" name="confirmPassword" required autoComplete="confirmPassword" />
             {passwordError && <div style={{ color: 'red' }}>{passwordError}</div>}
           </div>
@@ -176,8 +184,13 @@ const MemberRegister: React.FC = () => {
             </select>
           </div>
           <div className="mb-3">
-            <label htmlFor="affiliated" className="form-label">Affiliated:</label>
-            <input type="text" id="affiliated" className="form-control" name="affiliated" required autoComplete="affiliated" />
+            <label htmlFor="affiliated" className="form-label">Church Branch:</label>
+            <select id="affiliated" className="form-select" name="affiliated" required>
+              <option value="">Select church branch</option>
+              <option value="Location A">Location A</option>
+              <option value="Location B">Location B</option>
+              <option value="Location C">Location C</option>
+            </select>
           </div>
           <button type="submit" className="btn btn-primary">Complete Registration</button>
           {message && <p style={{ color: 'green' }}>{message}</p>}
