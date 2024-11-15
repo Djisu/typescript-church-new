@@ -17,6 +17,7 @@ import MemberRegistrationForm from './features/event/MemberRegistrationForm';
 import MemberRegister from './features/member/MemberRegister';
 import MemberProfile from './features/member/MemberProfile';
 import ListMembers from './features/member/ListMembers';
+import {ListEvents} from './features/event/ListEvents';
 import MemberDetail from './features/member/MemberDetail';
 import { MemberLogin } from './features/member/MemberLogin';
 import { MemberRequestPasswordReset } from './features/member/MemberRequestPasswordReset';
@@ -83,6 +84,7 @@ const App: React.FC = () => {
               <Route path="/userpage" element={<UserPage />} />
               <Route path="/user/listusers" element={<ListUsers />} />
               <Route path="/events" element={<EventCreationForm  onEventCreated={handleEventCreated}  />} />
+              <Route path="/event/listevents" element={<ListEvents />} />
               <Route
                 path="/event/member-registration"
                 element={

@@ -118,6 +118,7 @@ export const NavigationBar = () => {
 
   const [$dropdownOpen, setDropdownOpen] = useState(false);
   const [$dropdownOpenMember, setDropdownOpenMember] = useState(false);
+  const [$dropdownOpenEvent, setDropdownOpenEvent] = useState(false);
 
   useEffect(() => {
     console.log('Current Role:', role); // Debugging line
@@ -131,6 +132,10 @@ export const NavigationBar = () => {
 
   const handleToggleDropdownMember = () => {
     setDropdownOpenMember((prev) => !prev);
+  };
+
+  const handleToggleDropdownEvent = () => {
+    setDropdownOpenEvent((prev) => !prev);
   };
 
   return (
@@ -181,10 +186,29 @@ export const NavigationBar = () => {
                   )}
                 </DropdownWrapper>
               </li>
-              <li>
+              {/* <li>
               {userRole === 'admin' && (
-                <NavLink to="/events">Events</NavLink>
+                <>
+                  <NavLink to="/events">Events</NavLink>
+                  <NavLink to="/event/listevents">List Events</NavLink>
+                </>
               )}                
+              </li> */}
+              <li>
+                <span 
+                  onClick={handleToggleDropdownEvent} 
+                  style={{ cursor: 'pointer', color: '#9ca3af' }}
+                >
+                  Events
+                </span>
+                <DropdownWrapper $isOpen={$dropdownOpenEvent} onMouseLeave={() => setDropdownOpenEvent(false)}> 
+                  {userRole === 'admin' && (
+                    <>
+                      <DropdownLink to="/events">Events</DropdownLink>
+                      <DropdownLink to="/event/listevents">List Events</DropdownLink>
+                    </>
+                  )}
+                </DropdownWrapper>
               </li>
             </NavLinks>
             <NavActions>

@@ -85,19 +85,20 @@ export const deleteEvent = createAsyncThunk<string, string, { rejectValue: strin
   'events/deleteEvent',
   async (eventId, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`${BASE_URL}/api/events/${eventId}`);
-      return eventId;
+      await axios.delete(`${BASE_URL}/api/events/${eventId}`);
+      return eventId; // Return the event ID after successful deletion
     } catch (error: any) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || "Error deleting event");
     }
   }
 );
 
-export const searchEvents = createAsyncThunk<IEvent[], Partial<IEvent>, { rejectValue: string }>(
+export const searchEvents = createAsyncThunk<IEvent[], void, { rejectValue: string }>(
   'events/searchEvents',
-  async (searchParams, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => { // Remove searchParams and use _ as a placeholder
+    console.log('in searchEvents slice');
     try {
-      const response = await axiosInstance.get<IEvent[]>(`${BASE_URL}/api/events`, { params: searchParams });
+      const response = await axiosInstance.get<IEvent[]>(`${BASE_URL}/api/events`);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response.data);
@@ -105,13 +106,28 @@ export const searchEvents = createAsyncThunk<IEvent[], Partial<IEvent>, { reject
   }
 );
 
+// export const searchEvents = createAsyncThunk<IEvent[], Partial<IEvent>, { rejectValue: string }>(
+//   'events/searchEvents',
+//   async (searchParams, { rejectWithValue }) => {
+//     console.log('in searchEvents slice')
+//     try {
+//       const response = await axiosInstance.get<IEvent[]>(`${BASE_URL}/api/events`, { params: searchParams });
+//       return response.data;
+//     } catch (error: any) {
+//       return rejectWithValue(error.response.data);
+//     }
+//   }
+// );
+
 
 
 const eventSlice = createSlice({
   name: 'events',
   initialState,
   reducers: {
-    // Add any additional reducers you might need
+    setEvents: (state, action: PayloadAction<IEvent[]>) => {
+      state.events = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder

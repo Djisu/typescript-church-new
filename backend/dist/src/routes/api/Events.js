@@ -41,7 +41,6 @@ const transport = nodemailer.createTransport({
 });
 // Function to send an email
 const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('Sending email to:', options.to);
     try {
         yield transport.sendMail({
             from: emailUser,
@@ -71,13 +70,10 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
                 registeredAt: reg.registeredAt,
             })),
         };
-        console.log('before createEvent');
         // Create the new event
         const createdEvent = yield Event.create(newEvent);
         // Fetch all members to get their email addresses
         const members = yield Member.find({}, 'email'); // Get only the email field
-        console.log('after createEvent');
-        console.log('before emailPromises');
         // Prepare email details
         const emailPromises = members.map(member => {
             return sendEmail({
@@ -142,6 +138,7 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
 // Get all events
 router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('in backend router.get');
         const events = yield Event.find();
         res.json(events);
     }

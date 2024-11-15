@@ -41,7 +41,7 @@ const transport = nodemailer.createTransport({
 
 // Function to send an email
 const sendEmail = async (options: { to: string; subject: string; text: string }) => {
-  console.log('Sending email to:', options.to)
+  
   try {
     await transport.sendMail({
       from: emailUser,
@@ -73,16 +73,11 @@ router.post('/create', async (req: Request, res: Response) => {
       })),
     };
 
-console.log('before createEvent')
-
     // Create the new event
     const createdEvent = await Event.create(newEvent);
 
     // Fetch all members to get their email addresses
     const members = await Member.find({}, 'email'); // Get only the email field
-
-    console.log('after createEvent')
-    console.log('before emailPromises')
 
     // Prepare email details
     const emailPromises = members.map(member => {
@@ -159,6 +154,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 // Get all events
 router.get('/', async (req: Request, res: Response) => {
   try {
+    console.log('in backend router.get')
     const events = await Event.find();
     res.json(events);
   } catch (error: any) {
