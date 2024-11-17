@@ -51,6 +51,9 @@ const NavLink = styled(Link)`
 const NavActions = styled.div`
   display: flex;
   align-items: center;
+  margin-left: auto; /* Ensures the NavActions align to the right */
+  margin-top: 1rem;  /* Optional: Add some top margin for spacing */
+  margin-left: 1.5rem; /* Add left margin to separate from NavLinks */
   @media (max-width: 768px) {
     margin-top: 1rem;
     justify-content: flex-end;
@@ -186,14 +189,7 @@ export const NavigationBar = () => {
                   )}
                 </DropdownWrapper>
               </li>
-              {/* <li>
-              {userRole === 'admin' && (
-                <>
-                  <NavLink to="/events">Events</NavLink>
-                  <NavLink to="/event/listevents">List Events</NavLink>
-                </>
-              )}                
-              </li> */}
+            
               <li>
                 <span 
                   onClick={handleToggleDropdownEvent} 

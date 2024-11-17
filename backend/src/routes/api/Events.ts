@@ -56,7 +56,128 @@ const sendEmail = async (options: { to: string; subject: string; text: string })
   }
 };  
 
-// Create a new event
+// Create a new 
+/**
+ * @swagger
+ * /create:
+ *   post:
+ *     summary: Create a new event
+ *     description: Creates a new event and sends notifications to all members via email.
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: The title of the event.
+ *                 example: "Annual Company Meeting"
+ *               description:
+ *                 type: string
+ *                 description: A brief description of the event.
+ *                 example: "Discussion of annual achievements and future goals."
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The start date and time of the event in ISO 8601 format.
+ *                 example: "2023-12-01T10:00:00Z"
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The end date and time of the event in ISO 8601 format.
+ *                 example: "2023-12-01T12:00:00Z"
+ *               location:
+ *                 type: string
+ *                 description: The location where the event will take place.
+ *                 example: "Conference Room A"
+ *               registrations:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     memberId:
+ *                       type: string
+ *                       description: The ID of the member registering for the event.
+ *                       example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                     registeredAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: The date and time of registration in ISO 8601 format.
+ *                       example: "2023-11-01T10:00:00Z"
+ *     responses:
+ *       201:
+ *         description: Successfully created the event.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: The unique identifier of the created event.
+ *                   example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                 title:
+ *                   type: string
+ *                   description: The title of the event.
+ *                   example: "Annual Company Meeting"
+ *                 description:
+ *                   type: string
+ *                   description: A brief description of the event.
+ *                   example: "Discussion of annual achievements and future goals."
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The start date and time of the event.
+ *                   example: "2023-12-01T10:00:00Z"
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The end date and time of the event.
+ *                   example: "2023-12-01T12:00:00Z"
+ *                 location:
+ *                   type: string
+ *                   description: The location where the event will take place.
+ *                   example: "Conference Room A"
+ *                 registrations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       memberId:
+ *                         type: string
+ *                         description: The ID of the member who registered.
+ *                         example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                       registeredAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date and time of registration.
+ *                         example: "2023-11-01T10:00:00Z"
+ *       400:
+ *         description: Bad request due to validation errors or other issues.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Error creating event or sending emails."
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.post('/create', async (req: Request, res: Response) => {
   console.log('in /create event backend')
 
@@ -102,7 +223,99 @@ router.post('/create', async (req: Request, res: Response) => {
   }
 });
 
+
 // Update Event Registrations Endpoint
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a member for an event
+ *     description: Allows a member to register for a specific event by providing their member ID and event ID.
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               memberId:
+ *                 type: string
+ *                 description: The ID of the member registering for the event.
+ *                 example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *               eventId:
+ *                 type: string
+ *                 description: The ID of the event for which the member is registering.
+ *                 example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *               registeredAt:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The date and time of registration in ISO 8601 format.
+ *                 example: "2023-11-01T10:00:00Z"
+ *     responses:
+ *       200:
+ *         description: Successfully registered the member for the event.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: The unique identifier of the updated event.
+ *                   example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                 title:
+ *                   type: string
+ *                   description: The title of the event.
+ *                   example: "Annual Company Meeting"
+ *                 registrations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       memberId:
+ *                         type: string
+ *                         description: The ID of the member who registered.
+ *                         example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                       registeredAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date and time of registration.
+ *                         example: "2023-11-01T10:00:00Z"
+ *       400:
+ *         description: Bad request due to validation errors or already registered member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Member is already registered for this event"
+ *       404:
+ *         description: Event not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Event not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   const { memberId, eventId, registeredAt } = req.body;
 
@@ -152,6 +365,75 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
 
 // Get all events
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Retrieve all events
+ *     description: Fetches a list of all events from the database.
+ *     tags: [Events]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of events.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     description: The unique identifier of the event.
+ *                     example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                   title:
+ *                     type: string
+ *                     description: The title of the event.
+ *                     example: "Annual Company Meeting"
+ *                   description:
+ *                     type: string
+ *                     description: A brief description of the event.
+ *                     example: "Discussion of annual achievements and future goals."
+ *                   startDate:
+ *                     type: string
+ *                     format: date-time
+ *                     description: The start date and time of the event in ISO 8601 format.
+ *                     example: "2023-12-01T10:00:00Z"
+ *                   endDate:
+ *                     type: string
+ *                     format: date-time
+ *                     description: The end date and time of the event in ISO 8601 format.
+ *                     example: "2023-12-01T12:00:00Z"
+ *                   location:
+ *                     type: string
+ *                     description: The location where the event will take place.
+ *                     example: "Conference Room A"
+ *                   registrations:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         memberId:
+ *                           type: string
+ *                           description: The ID of the member who registered.
+ *                           example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                         registeredAt:
+ *                           type: string
+ *                           format: date-time
+ *                           description: The date and time of registration.
+ *                           example: "2023-11-01T10:00:00Z"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.get('/', async (req: Request, res: Response) => {
   try {
     console.log('in backend router.get')
@@ -163,6 +445,92 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Get a specific event by ID
+/**
+ * @swagger
+ * /{id}:
+ *   get:
+ *     summary: Retrieve a specific event by ID
+ *     description: Fetches the details of a specific event using its unique identifier.
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier of the event to retrieve.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the event.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: The unique identifier of the event.
+ *                   example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                 title:
+ *                   type: string
+ *                   description: The title of the event.
+ *                   example: "Annual Company Meeting"
+ *                 description:
+ *                   type: string
+ *                   description: A brief description of the event.
+ *                   example: "Discussion of annual achievements and future goals."
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The start date and time of the event in ISO 8601 format.
+ *                   example: "2023-12-01T10:00:00Z"
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The end date and time of the event in ISO 8601 format.
+ *                   example: "2023-12-01T12:00:00Z"
+ *                 location:
+ *                   type: string
+ *                   description: The location where the event will take place.
+ *                   example: "Conference Room A"
+ *                 registrations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       memberId:
+ *                         type: string
+ *                         description: The ID of the member who registered.
+ *                         example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                       registeredAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date and time of registration.
+ *                         example: "2023-11-01T10:00:00Z"
+ *       404:
+ *         description: Event not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Event not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const event = await Event.findById(req.params.id);
@@ -178,6 +546,146 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Update an event
+/**
+ * @swagger
+ * /{id}:
+ *   put:
+ *     summary: Update an existing event by ID
+ *     description: Updates the details of a specific event using its unique identifier.
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier of the event to update.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: The updated title of the event.
+ *                 example: "Updated Company Meeting"
+ *               description:
+ *                 type: string
+ *                 description: The updated description of the event.
+ *                 example: "Updated discussion of annual achievements and future goals."
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The updated start date and time of the event in ISO 8601 format.
+ *                 example: "2023-12-01T10:00:00Z"
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The updated end date and time of the event in ISO 8601 format.
+ *                 example: "2023-12-01T12:00:00Z"
+ *               location:
+ *                 type: string
+ *                 description: The updated location where the event will take place.
+ *                 example: "Updated Conference Room A"
+ *               registrations:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     memberId:
+ *                       type: string
+ *                       description: The ID of the member registering for the event.
+ *                       example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                     registeredAt:
+ *                       type: string
+ *                       format: date-time
+ *                       description: The date and time of registration in ISO 8601 format.
+ *                       example: "2023-11-01T10:00:00Z"
+ *     responses:
+ *       200:
+ *         description: Successfully updated the event.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: The unique identifier of the updated event.
+ *                   example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                 title:
+ *                   type: string
+ *                   description: The updated title of the event.
+ *                   example: "Updated Company Meeting"
+ *                 description:
+ *                   type: string
+ *                   description: The updated description of the event.
+ *                   example: "Updated discussion of annual achievements and future goals."
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The updated start date and time of the event.
+ *                   example: "2023-12-01T10:00:00Z"
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The updated end date and time of the event.
+ *                   example: "2023-12-01T12:00:00Z"
+ *                 location:
+ *                   type: string
+ *                   description: The updated location of the event.
+ *                   example: "Updated Conference Room A"
+ *                 registrations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       memberId:
+ *                         type: string
+ *                         description: The ID of the member who registered.
+ *                         example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                       registeredAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: The date and time of registration.
+ *                         example: "2023-11-01T10:00:00Z"
+ *       400:
+ *         description: Bad request due to validation errors or invalid data.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Invalid input data"
+ *       404:
+ *         description: Event not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Event not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const updatedEvent = await Event.findByIdAndUpdate(
@@ -201,7 +709,57 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Delete an event
+// Delete an 
+/**
+ * @swagger
+ * /{id}:
+ *   delete:
+ *     summary: Delete a specific event by ID
+ *     description: Deletes a specific event using its unique identifier.
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier of the event to delete.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the event.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message.
+ *                   example: "Event deleted"
+ *       404:
+ *         description: Event not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Event not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const event = await Event.findByIdAndDelete(req.params.id);
@@ -217,6 +775,78 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Send text message to event registrants
+/**
+ * @swagger
+ * /{id}/send-message:
+ *   post:
+ *     summary: Send a message to registered members of an event
+ *     description: Sends a text message to the phone numbers of all members registered for a specific event using its unique identifier.
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique identifier of the event for which to send messages.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: The message to be sent to registered members.
+ *                 example: "Don't forget about the upcoming event!"
+ *     responses:
+ *       200:
+ *         description: Successfully sent text messages to registered members.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message.
+ *                   example: "Text messages sent successfully"
+ *       400:
+ *         description: Bad request due to missing message.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Message is required"
+ *       404:
+ *         description: Event not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Event not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.post('/:id/send-message', async (req: Request, res: Response): Promise<void> => {
     try {
       const event = await Event.findById(req.params.id);

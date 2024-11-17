@@ -11,6 +11,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import swaggerUi from 'swagger-ui-express';
+//import swaggerDocs from './config/swagger';
 import multer, { diskStorage } from 'multer'; // Use lowercase 'multer'
 import eventsRoute from './routes/api/Events.js';
 import membersRoute from './routes/api/Members.js';
@@ -20,8 +22,7 @@ import path from 'path';
 import morgan from 'morgan';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname } from 'path';
-//import mongoose from'mongoose';
-//import authenticateJWT from './utils/authenticateJWT.js';
+import swaggerJSDoc from 'swagger-jsdoc';
 mongoose.set('strictQuery', false);
 mongoose.set('debug', true);
 // Load environment variables from .env file
@@ -60,9 +61,24 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
     credentials: true // Allow credentials such as cookies
 }));
-//app.use(cors({ origin: 'https://church-management-frontend.onrender.com' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Swagger definition
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'TypeScript Church API',
+            version: '1.0.0',
+            description: 'API documentation for your Node.js backend',
+        },
+    },
+    apis: ['src/routes/api/*.ts'], // Adjust based on your file structure
+};
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
+console.log('swaggerDocs: ', swaggerDocs);
+// Serve Swagger docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // Define routes
 app.use('/api/events', eventsRoute);
 app.use('/api/members', membersRoute);

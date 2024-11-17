@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 import express, { Request, Response, Express, NextFunction  } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import swaggerUi from 'swagger-ui-express';
+//import swaggerDocs from './config/swagger';
 
 import multer, { diskStorage, StorageEngine } from 'multer'; // Use lowercase 'multer'
 import eventsRoute from './routes/api/Events.js';
@@ -16,9 +18,7 @@ import morgan from 'morgan';
 
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname, join } from 'path';
-
-//import mongoose from'mongoose';
-//import authenticateJWT from './utils/authenticateJWT.js';
+import swaggerJSDoc from 'swagger-jsdoc';
 
 mongoose.set('strictQuery', false);
 mongoose.set('debug', true);
@@ -69,11 +69,27 @@ app.use(cors({
   credentials: true // Allow credentials such as cookies
 }));
 
-//app.use(cors({ origin: 'https://church-management-frontend.onrender.com' }));
-
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger definition
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'TypeScript Church API',
+      version: '1.0.0',
+      description: 'API documentation for your Node.js backend',
+    },
+  },
+  apis: ['src/routes/api/*.ts'], // Adjust based on your file structure
+};
+
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
+console.log('swaggerDocs: ', swaggerDocs);
+
+// Serve Swagger docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Define routes
 app.use('/api/events', eventsRoute);

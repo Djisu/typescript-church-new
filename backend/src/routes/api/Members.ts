@@ -42,11 +42,88 @@ const transport = nodemailer.createTransport({
       pass: appPassword  //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD', 
     }
   });
-
-//   router.get('/reset-password', (req, res) => {
-//     res.status(200).json({ message: 'Welcome to the API!' });
-//   });  
-
+  
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Member login
+ *     description: Authenticates a member and returns a JSON Web Token (JWT) if the credentials are valid.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: The email of the member.
+ *                 example: "member@example.com"
+ *               password:
+ *                 type: string
+ *                 description: The password of the member (minimum 6 characters).
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Successfully logged in and returned a JWT token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JSON Web Token for authenticated access.
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR..."
+ *                 member:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: The unique identifier of the member.
+ *                       example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                     username:
+ *                       type: string
+ *                       description: The username of the member.
+ *                       example: "memberUser"
+ *                     email:
+ *                       type: string
+ *                       description: The email of the member.
+ *                       example: "member@example.com"
+ *                     role:
+ *                       type: string
+ *                       description: The role of the member.
+ *                       example: "user"
+ *       400:
+ *         description: Bad request due to validation errors or invalid credentials.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       msg:
+ *                         type: string
+ *                         description: Error message.
+ *                         example: "Invalid Credentials"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Server error"
+ */
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
@@ -115,7 +192,60 @@ router.post('/login', [
     }
 });
 
-// Reset password
+// Request for Reset password
+/**
+ * @swagger
+ * /request-password-reset:
+ *   post:
+ *     summary: Request a password reset
+ *     description: Generates a password reset token and sends a reset email to the member if the email exists in the system.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: The email of the member requesting the password reset.
+ *                 example: "member@example.com"
+ *     responses:
+ *       200:
+ *         description: Successfully sent the password reset email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message.
+ *                   example: "Password reset email sent."
+ *       404:
+ *         description: Member email not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Member Email not found."
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Server error"
+ */
 router.post('/request-password-reset', async (req: Request, res: Response) => {
     console.log('in backend Member.ts /request-password-reset')
 
@@ -155,6 +285,74 @@ router.post('/request-password-reset', async (req: Request, res: Response) => {
   });
 
 // Password reset
+/**
+ * @swagger
+ * /reset-password:
+ *   post:
+ *     summary: Reset a member's password
+ *     description: Validates a password reset token and updates the member's password if the token is valid and not expired.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The password reset token sent to the member's email.
+ *                 example: "a1b2c3d4e5f67890123456789abcdefabcdefabcdefabcdefabcdefabcdef"
+ *               newPassword:
+ *                 type: string
+ *                 description: The new password for the member (minimum 6 characters).
+ *                 example: "newpassword123"
+ *     responses:
+ *       200:
+ *         description: Successfully reset the password.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message.
+ *                   example: "Password has been reset successfully."
+ *       400:
+ *         description: Bad request due to invalid token or password criteria not met.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Invalid token format."
+ *       404:
+ *         description: Token not found or member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Token not found."
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Server error"
+ */
 router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
    // console.log('in Member.ts /reset-password')
     const { token, newPassword } = req.body;
@@ -205,18 +403,103 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
   });
 
 
-
 /**
- * @summary Create a new member and send verification email.
- * @route POST /members
- * @param {Object} req.body - The member data.
- * @param {string} req.body.firstName - The first name of the member.
- * @param {string} req.body.lastName - The last name of the member.
- * @param {string} req.body.email - The email address of the member.
- * @param {string} req.body.password - The password for the member.
- * @param {string} req.body.membername - The username of the member.
- * @returns {Object} 201 - The created member object.
- * @returns {Error} 400 - User already exists or validation errors.
+ * @swagger
+ * /create:
+ *   post:
+ *     summary: Create a new member
+ *     description: Registers a new member and sends a verification email to the provided email address.
+ *     tags: [Members]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 description: The first name of the member.
+ *                 example: "John"
+ *               lastName:
+ *                 type: string
+ *                 description: The last name of the member.
+ *                 example: "Doe"
+ *               email:
+ *                 type: string
+ *                 description: The email address of the member.
+ *                 example: "john.doe@example.com"
+ *               password:
+ *                 type: string
+ *                 description: The password for the member (minimum 6 characters).
+ *                 example: "password123"
+ *               userName:
+ *                 type: string
+ *                 description: The username for the member.
+ *                 example: "johndoe"
+ *               role:
+ *                 type: string
+ *                 description: The role assigned to the member.
+ *                 example: "user"
+ *               phone:
+ *                 type: string
+ *                 description: The phone number of the member.
+ *                 example: "+1234567890"
+ *               address:
+ *                 type: string
+ *                 description: The address of the member.
+ *                 example: "123 Main St, Anytown, USA"
+ *               membership_type:
+ *                 type: string
+ *                 description: The type of membership for the member.
+ *                 example: "premium"
+ *               status:
+ *                 type: string
+ *                 description: The current status of the member.
+ *                 example: "pending approval"
+ *               affiliated:
+ *                 type: string
+ *                 description: Any affiliations of the member.
+ *                 example: "Some Organization"
+ *               joinedDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The date the member joined.
+ *                 example: "2024-01-01T00:00:00Z"
+ *     responses:
+ *       201:
+ *         description: Successfully created the member and sent a verification email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message.
+ *                   example: "User not registered yet. Check your email for verification."
+ *       400:
+ *         description: Bad request due to validation errors or existing user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "User already exists"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Error sending email"
  */
 router.post('/create', async (req: Request, res: Response): Promise<void> => {
     console.log('in create member ');
@@ -301,10 +584,61 @@ router.post('/create', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
- * @summary Get all members.
- * @route GET /members
- * @returns {Array<IMember>} 200 - An array of member objects.
- * @returns {Error} 500 - Internal server error.
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Retrieve all members
+ *     description: Fetches a list of all registered members from the database.
+ *     tags: [Members]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of members.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     description: The unique identifier of the member.
+ *                     example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                   firstName:
+ *                     type: string
+ *                     description: The first name of the member.
+ *                     example: "John"
+ *                   lastName:
+ *                     type: string
+ *                     description: The last name of the member.
+ *                     example: "Doe"
+ *                   email:
+ *                     type: string
+ *                     description: The email address of the member.
+ *                     example: "john.doe@example.com"
+ *                   userName:
+ *                     type: string
+ *                     description: The username of the member.
+ *                     example: "johndoe"
+ *                   role:
+ *                     type: string
+ *                     description: The role assigned to the member.
+ *                     example: "user"
+ *                   status:
+ *                     type: string
+ *                     description: The current status of the member.
+ *                     example: "active"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Server error"
  */
 router.get('/', async (req: Request, res: Response) => {
     try {
@@ -316,11 +650,74 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 /**
- * @summary Get a member by ID.
- * @route GET /members/{memberId}
- * @param {string} memberId.path.required - The ID of the member.
- * @returns {IMember} 200 - The member object.
- * @returns {Error} 404 - Member not found.
+ * @swagger
+ * /{memberId}:
+ *   get:
+ *     summary: Retrieve a specific member by ID
+ *     description: Fetches a member's details based on the provided member ID.
+ *     tags: [Members]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the member's details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: The unique identifier of the member.
+ *                   example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                 firstName:
+ *                   type: string
+ *                   description: The first name of the member.
+ *                   example: "John"
+ *                 lastName:
+ *                   type: string
+ *                   description: The last name of the member.
+ *                   example: "Doe"
+ *                 email:
+ *                   type: string
+ *                   description: The email address of the member.
+ *                   example: "john.doe@example.com"
+ *                 userName:
+ *                   type: string
+ *                   description: The username of the member.
+ *                   example: "johndoe"
+ *                 role:
+ *                   type: string
+ *                   description: The role assigned to the member.
+ *                   example: "user"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.get('/:memberId', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -335,13 +732,126 @@ router.get('/:memberId', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
- * @summary Update a member by ID.
- * @route PUT /members/{memberId}
- * @param {string} memberId.path.required - The ID of the member to update.
- * @param {Object} req.body - The updated member data.
- * @returns {IMember} 200 - The updated member object.
- * @returns {Error} 404 - Member not found.
- * @returns {Error} 400 - Validation error.authenticateJWT,
+ * @swagger
+ * /{memberId}:
+ *   put:
+ *     summary: Update a member's information
+ *     description: Updates the details of a specific member identified by member ID. Requires authentication and a role check.
+ *     tags: [Members]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member to be updated.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 description: The first name of the member.
+ *                 example: "John"
+ *               lastName:
+ *                 type: string
+ *                 description: The last name of the member.
+ *                 example: "Doe"
+ *               email:
+ *                 type: string
+ *                 description: The email address of the member.
+ *                 example: "john.doe@example.com"
+ *               userName:
+ *                 type: string
+ *                 description: The username of the member.
+ *                 example: "johndoe"
+ *               role:
+ *                 type: string
+ *                 description: The role assigned to the member. Must be 'Member' to authorize the update.
+ *                 example: "Member"
+ *               phone:
+ *                 type: string
+ *                 description: The phone number of the member.
+ *                 example: "+1234567890"
+ *               address:
+ *                 type: string
+ *                 description: The address of the member.
+ *                 example: "123 Main St, Anytown, USA"
+ *               status:
+ *                 type: string
+ *                 description: The current status of the member.
+ *                 example: "active"
+ *     responses:
+ *       200:
+ *         description: Successfully updated the member's information.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: The unique identifier of the member.
+ *                   example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *                 firstName:
+ *                   type: string
+ *                   description: The updated first name of the member.
+ *                   example: "John"
+ *                 lastName:
+ *                   type: string
+ *                   description: The updated last name of the member.
+ *                   example: "Doe"
+ *                 email:
+ *                   type: string
+ *                   description: The updated email address of the member.
+ *                   example: "john.doe@example.com"
+ *                 userName:
+ *                   type: string
+ *                   description: The updated username of the member.
+ *                   example: "johndoe"
+ *                 role:
+ *                   type: string
+ *                   description: The updated role assigned to the member.
+ *                   example: "Member"
+ *       403:
+ *         description: Forbidden if the user is not authorized to perform the update.
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the member was not found.
+ *                   example: "Member not found"
+ *       400:
+ *         description: Bad request due to validation errors or other issues.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Validation failed"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.put('/:memberId', authenticateJWT, async (req: Request, res: Response): Promise<void> => {
     console.log('backend in update member');
@@ -386,12 +896,54 @@ router.put('/:memberId', authenticateJWT, async (req: Request, res: Response): P
 });
 
 /**
- * @summary Delete a member by ID.
- * @route DELETE /members/{memberId}
- * @param {string} memberId.path.required - The ID of the member to delete.
- * @returns {Object} 200 - Confirmation message.
- * @returns {Error} 404 - Member not found.
- * @returns {Error} 500 - Internal server error.
+ * @swagger
+ * /{memberId}:
+ *   delete:
+ *     summary: Delete a member by ID
+ *     description: Deletes a specific member identified by the member ID from the database.
+ *     tags: [Members]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member to be deleted.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message indicating the member was deleted.
+ *                   example: "Member deleted"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.delete('/:memberId', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -405,16 +957,88 @@ router.delete('/:memberId', async (req: Request, res: Response): Promise<void> =
     }
 });
 
+
 /**
- * @summary Create attendance record for a member.
- * @route POST /members/{memberId}/attendance
- * @param {string} memberId.path.required - The ID of the member.
- * @param {Object} req.body - Attendance data.
- * @param {string} req.body.date - The date of attendance.
- * @param {boolean} req.body.attended - Attendance status.
- * @returns {Object} 201 - The created attendance record.
- * @returns {Error} 404 - Member not found.
- * @returns {Error} 400 - Validation error.
+ * @swagger
+ * /{memberId}/attendance:
+ *   post:
+ *     summary: Record attendance for a member
+ *     description: Adds an attendance record for a specific member identified by their member ID.
+ *     tags: [Attendance]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member for whom attendance is being recorded.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The date of the attendance record.
+ *                 example: "2024-11-16"
+ *               attended:
+ *                 type: boolean
+ *                 description: Indicates whether the member attended on the specified date.
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: Successfully recorded the attendance for the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   description: The date of attendance.
+ *                   example: "2024-11-16"
+ *                 attended:
+ *                   type: boolean
+ *                   description: Attendance status.
+ *                   example: true
+ *       400:
+ *         description: Bad request due to invalid member ID format or other validation errors.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the reason for the bad request.
+ *                   example: "Invalid member ID format"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.post('/:memberId/attendance', async (req: Request, res: Response): Promise<void> => {
     console.log('in router.post(/:memberId/attendance')
@@ -442,12 +1066,61 @@ router.post('/:memberId/attendance', async (req: Request, res: Response): Promis
 });
 
 /**
- * @summary Get attendance record for a member.
- * @route GET /members/{memberId}/attendance
- * @param {string} memberId.path.required - The ID of the member.
- * @returns {Array} 200 - The attendance records for the member.
- * @returns {Error} 404 - Member not found.
- * @returns {Error} 500 - Internal server error.
+ * @swagger
+ * /{memberId}/attendance:
+ *   get:
+ *     summary: Retrieve attendance records for a member
+ *     description: Fetches the attendance records for a specific member identified by their member ID.
+ *     tags: [Attendance]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose attendance records are being retrieved.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the attendance records for the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   date:
+ *                     type: string
+ *                     format: date
+ *                     description: The date of attendance.
+ *                     example: "2024-11-16"
+ *                   attended:
+ *                     type: boolean
+ *                     description: Indicates whether the member attended on the specified date.
+ *                     example: true
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.get('/:memberId/attendance', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -466,16 +1139,93 @@ router.get('/:memberId/attendance', async (req: Request, res: Response): Promise
 });
 
 /**
- * @summary Update attendance record for a member.
- * @route PUT /members/{memberId}/attendance/{recordId}
- * @param {string} memberId.path.required - The ID of the member.
- * @param {string} recordId.path.required - The ID of the attendance record.
- * @param {Object} req.body - Updated attendance data.
- * @param {string} req.body.date - The updated date of attendance.
- * @param {boolean} req.body.attended - Updated attendance status.
- * @returns {Object} 200 - The updated attendance record.
- * @returns {Error} 404 - Member or attendance record not found.
- * @returns {Error} 400 - Validation error.
+ * @swagger
+ * /{memberId}/attendance/{recordId}:
+ *   put:
+ *     summary: Update a member's attendance record
+ *     description: Updates a specific attendance record for a member identified by their member ID and record ID.
+ *     tags: [Attendance]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose attendance record is being updated.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *       - in: path
+ *         name: recordId
+ *         required: true
+ *         description: The unique identifier of the attendance record to be updated (formatted as a timestamp).
+ *         schema:
+ *           type: string
+ *           example: "1637280000000"  # Example timestamp in milliseconds
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The updated date of the attendance record.
+ *                 example: "2024-11-16"
+ *               attended:
+ *                 type: boolean
+ *                 description: Indicates whether the member attended on the specified date.
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Successfully updated the attendance record.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   description: The updated date of attendance.
+ *                   example: "2024-11-16"
+ *                 attended:
+ *                   type: boolean
+ *                   description: Updated attendance status.
+ *                   example: true
+ *       404:
+ *         description: Member or attendance record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member or record was not found.
+ *                   example: "Member not found" or "Attendance record not found"
+ *       400:
+ *         description: Bad request due to validation errors or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the reason for the bad request.
+ *                   example: "Invalid input"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.put('/:memberId/attendance/:recordId', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -505,13 +1255,61 @@ router.put('/:memberId/attendance/:recordId', async (req: Request, res: Response
 });
 
 /**
- * @summary Delete attendance record for a member.
- * @route DELETE /members/{memberId}/attendance/{recordId}
- * @param {string} memberId.path.required - The ID of the member.
- * @param {string} recordId.path.required - The ID of the attendance record.
- * @returns {Object} 200 - Confirmation message.
- * @returns {Error} 404 - Member or attendance record not found.
- * @returns {Error} 500 - Internal server error.
+ * @swagger
+ * /{memberId}/attendance/{recordId}:
+ *   delete:
+ *     summary: Delete a member's attendance record
+ *     description: Deletes a specific attendance record for a member identified by their member ID and record ID.
+ *     tags: [Attendance]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose attendance record is being deleted.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *       - in: path
+ *         name: recordId
+ *         required: true
+ *         description: The unique identifier of the attendance record to be deleted (formatted as a timestamp).
+ *         schema:
+ *           type: string
+ *           example: "1637280000000"  # Example timestamp in milliseconds
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the attendance record.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message indicating the record was deleted.
+ *                   example: "Attendance record deleted"
+ *       404:
+ *         description: Member or attendance record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member or record was not found.
+ *                   example: "Member not found" or "Attendance record not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.delete('/:memberId/attendance/:recordId', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -542,15 +1340,86 @@ router.delete('/:memberId/attendance/:recordId', async (req: Request, res: Respo
 
 // Tithe
 /**
- * @summary Create tithe record for a member.
- * @route POST /members/{memberId}/tithe
- * @param {string} memberId.path.required - The ID of the member.
- * @param {Object} req.body - tithe data.
- * @param {string} req.body.date - The date of tithe.
- * @param {boolean} req.body.amount - Amount quantity.
- * @returns {Object} 201 - The created tithe record.
- * @returns {Error} 404 - Member not found.
- * @returns {Error} 400 - Validation error.
+ * @swagger
+ * /{memberId}/tithes:
+ *   post:
+ *     summary: Record a tithe for a member
+ *     description: Adds a tithe record for a specific member identified by their member ID.
+ *     tags: [Tithes]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member for whom the tithe is being recorded.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The date of the tithe record.
+ *                 example: "2024-11-16"
+ *               amount:
+ *                 type: number
+ *                 description: The amount of the tithe.
+ *                 example: 100.00
+ *     responses:
+ *       201:
+ *         description: Successfully recorded the tithe for the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   description: The date of the recorded tithe.
+ *                   example: "2024-11-16"
+ *                 amount:
+ *                   type: number
+ *                   description: The amount of the recorded tithe.
+ *                   example: 100.00
+ *       400:
+ *         description: Bad request due to invalid member ID format or other validation errors.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the reason for the bad request.
+ *                   example: "Invalid member ID format"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.post('/:memberId/tithes', async (req: Request, res: Response): Promise<void> => {
   console.log('in router.post(/:memberId/tithes')
@@ -578,13 +1447,62 @@ router.post('/:memberId/tithes', async (req: Request, res: Response): Promise<vo
 });
 
 /**
-* @summary Get tithe record for a member.
-* @route GET /members/{memberId}/tithes
-* @param {string} memberId.path.required - The ID of the member.
-* @returns {Array} 200 - The tithes records for the member.
-* @returns {Error} 404 - Member not found.
-* @returns {Error} 500 - Internal server error.
-*/
+ * @swagger
+ * /{memberId}/tithes:
+ *   get:
+ *     summary: Retrieve tithes for a member
+ *     description: Fetches the tithes records for a specific member identified by their member ID.
+ *     tags: [Tithes]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose tithes are being retrieved.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the tithes records for the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   date:
+ *                     type: string
+ *                     format: date
+ *                     description: The date of the tithe.
+ *                     example: "2024-11-16"
+ *                   amount:
+ *                     type: number
+ *                     description: The amount of the tithe.
+ *                     example: 100.00
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
+ */
 router.get('/:memberId/tithes', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId } = req.params;
@@ -602,17 +1520,94 @@ router.get('/:memberId/tithes', async (req: Request, res: Response): Promise<voi
 });
 
 /**
-* @summary Update tithe record for a member.
-* @route PUT /members/{memberId}/tithes/{recordId}
-* @param {string} memberId.path.required - The ID of the member.
-* @param {string} recordId.path.required - The ID of the tithe record.
-* @param {Object} req.body - Updated tithe data.
-* @param {string} req.body.date - The updated date of tithe.
-* @param {boolean} req.body.tithes - Updated tithe status.
-* @returns {Object} 200 - The updated tithe record.
-* @returns {Error} 404 - Member or tithe record not found.
-* @returns {Error} 400 - Validation error.
-*/
+ * @swagger
+ * /{memberId}/tithes/{recordId}:
+ *   put:
+ *     summary: Update a member's tithe record
+ *     description: Updates a specific tithe record for a member identified by their member ID and record ID.
+ *     tags: [Tithes]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose tithe record is being updated.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *       - in: path
+ *         name: recordId
+ *         required: true
+ *         description: The unique identifier of the tithe record to be updated (formatted as a timestamp).
+ *         schema:
+ *           type: string
+ *           example: "1637280000000"  # Example timestamp in milliseconds
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The updated date of the tithe record.
+ *                 example: "2024-11-16"
+ *               amount:
+ *                 type: number
+ *                 description: The updated amount of the tithe.
+ *                 example: 150.00
+ *     responses:
+ *       200:
+ *         description: Successfully updated the tithe record.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   description: The updated date of the tithe.
+ *                   example: "2024-11-16"
+ *                 amount:
+ *                   type: number
+ *                   description: The updated amount of the tithe.
+ *                   example: 150.00
+ *       404:
+ *         description: Member or tithe record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member or record was not found.
+ *                   example: "Member not found" or "Tithe record not found"
+ *       400:
+ *         description: Bad request due to validation errors or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the reason for the bad request.
+ *                   example: "Invalid input"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
+ */
 router.put('/:memberId/tithes/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
@@ -641,15 +1636,64 @@ router.put('/:memberId/tithes/:recordId', async (req: Request, res: Response): P
   }
 });
 
+
 /**
-* @summary Delete tithes record for a member.
-* @route DELETE /members/{memberId}/tithes/{recordId}
-* @param {string} memberId.path.required - The ID of the member.
-* @param {string} recordId.path.required - The ID of the tithes record.
-* @returns {Object} 200 - Confirmation message.
-* @returns {Error} 404 - Member or tithe record not found.
-* @returns {Error} 500 - Internal server error.
-*/
+ * @swagger
+ * /{memberId}/tithes/{recordId}:
+ *   delete:
+ *     summary: Delete a member's tithe record
+ *     description: Deletes a specific tithe record for a member identified by their member ID and record ID.
+ *     tags: [Tithes]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose tithe record is being deleted.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *       - in: path
+ *         name: recordId
+ *         required: true
+ *         description: The unique identifier of the tithe record to be deleted (formatted as a timestamp).
+ *         schema:
+ *           type: string
+ *           example: "1637280000000"  # Example timestamp in milliseconds
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the tithe record.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message indicating the record was deleted.
+ *                   example: "Tithe record deleted"
+ *       404:
+ *         description: Member or tithe record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member or record was not found.
+ *                   example: "Member not found" or "Tithe record not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
+ */
 router.delete('/:memberId/tithes/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
@@ -676,15 +1720,86 @@ router.delete('/:memberId/tithes/:recordId', async (req: Request, res: Response)
 
 // Offerings
 /**
- * @summary Create offering record for a member.
- * @route POST /members/{memberId}/offering
- * @param {string} memberId.path.required - The ID of the member.
- * @param {Object} req.body - offering data.
- * @param {string} req.body.date - The date of offering.
- * @param {boolean} req.body.amount - Amount quantity.
- * @returns {Object} 201 - The created offering record.
- * @returns {Error} 404 - Member not found.
- * @returns {Error} 400 - Validation error.
+ * @swagger
+ * /{memberId}/offerings:
+ *   post:
+ *     summary: Record an offering for a member
+ *     description: Adds an offering record for a specific member identified by their member ID.
+ *     tags: [Offerings]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member for whom the offering is being recorded.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The date of the offering record.
+ *                 example: "2024-11-16"
+ *               amount:
+ *                 type: number
+ *                 description: The amount of the offering.
+ *                 example: 100.00
+ *     responses:
+ *       201:
+ *         description: Successfully recorded the offering for the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   description: The date of the recorded offering.
+ *                   example: "2024-11-16"
+ *                 amount:
+ *                   type: number
+ *                   description: The amount of the recorded offering.
+ *                   example: 100.00
+ *       400:
+ *         description: Bad request due to invalid member ID format or other validation errors.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the reason for the bad request.
+ *                   example: "Invalid member ID format"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
  */
 router.post('/:memberId/offerings', async (req: Request, res: Response): Promise<void> => {
   console.log('in router.post(/:memberId/offerings')
@@ -712,13 +1827,62 @@ router.post('/:memberId/offerings', async (req: Request, res: Response): Promise
 });
 
 /**
-* @summary Get offerings record for a member.
-* @route GET /members/{memberId}/offerings
-* @param {string} memberId.path.required - The ID of the member.
-* @returns {Array} 200 - The offerings records for the member.
-* @returns {Error} 404 - Member not found.
-* @returns {Error} 500 - Internal server error.
-*/
+ * @swagger
+ * /{memberId}/offerings:
+ *   get:
+ *     summary: Retrieve offerings for a member
+ *     description: Fetches the offerings records for a specific member identified by their member ID.
+ *     tags: [Offerings]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose offerings are being retrieved.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the offerings records for the member.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   date:
+ *                     type: string
+ *                     format: date
+ *                     description: The date of the offering.
+ *                     example: "2024-11-16"
+ *                   amount:
+ *                     type: number
+ *                     description: The amount of the offering.
+ *                     example: 100.00
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member was not found.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
+ */
 router.get('/:memberId/offerings', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId } = req.params;
@@ -736,17 +1900,94 @@ router.get('/:memberId/offerings', async (req: Request, res: Response): Promise<
 });
 
 /**
-* @summary Update offerings record for a member.
-* @route PUT /members/{memberId}/offerings/{recordId}
-* @param {string} memberId.path.required - The ID of the member.
-* @param {string} recordId.path.required - The ID of the offerings record.
-* @param {Object} req.body - Updated offerings data.
-* @param {string} req.body.date - The updated date of offerings.
-* @param {boolean} req.body.attended - Updated offerings status.
-* @returns {Object} 200 - The updated offerings record.
-* @returns {Error} 404 - Member or offerings record not found.
-* @returns {Error} 400 - Validation error.
-*/
+ * @swagger
+ * /{memberId}/offerings/{recordId}:
+ *   put:
+ *     summary: Update a member's offering record
+ *     description: Updates a specific offering record for a member identified by their member ID and record ID.
+ *     tags: [Offerings]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose offering record is being updated.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *       - in: path
+ *         name: recordId
+ *         required: true
+ *         description: The unique identifier of the offering record to be updated (formatted as a timestamp).
+ *         schema:
+ *           type: string
+ *           example: "1637280000000"  # Example timestamp in milliseconds
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: The updated date of the offering record.
+ *                 example: "2024-11-16"
+ *               amount:
+ *                 type: number
+ *                 description: The updated amount of the offering.
+ *                 example: 150.00
+ *     responses:
+ *       200:
+ *         description: Successfully updated the offering record.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   description: The updated date of the offering.
+ *                   example: "2024-11-16"
+ *                 amount:
+ *                   type: number
+ *                   description: The updated amount of the offering.
+ *                   example: 150.00
+ *       404:
+ *         description: Member or offering record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member or record was not found.
+ *                   example: "Member not found" or "Offering record not found"
+ *       400:
+ *         description: Bad request due to validation errors or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the reason for the bad request.
+ *                   example: "Invalid input"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
+ */
 router.put('/:memberId/offerings/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
@@ -775,14 +2016,62 @@ router.put('/:memberId/offerings/:recordId', async (req: Request, res: Response)
 });
 
 /**
-* @summary Delete offerings record for a member.
-* @route DELETE /members/{memberId}/offerings/{recordId}
-* @param {string} memberId.path.required - The ID of the member.
-* @param {string} recordId.path.required - The ID of the offerings record.
-* @returns {Object} 200 - Confirmation message.
-* @returns {Error} 404 - Member or offerings record not found.
-* @returns {Error} 500 - Internal server error.
-*/
+ * @swagger
+ * /{memberId}/offerings/{recordId}:
+ *   delete:
+ *     summary: Delete a member's offering record
+ *     description: Deletes a specific offering record for a member identified by their member ID and record ID.
+ *     tags: [Offerings]
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         description: The unique identifier of the member whose offering record is being deleted.
+ *         schema:
+ *           type: string
+ *           example: "60c72b2f9b1d8e1c4f1f4b1b"
+ *       - in: path
+ *         name: recordId
+ *         required: true
+ *         description: The unique identifier of the offering record to be deleted (formatted as a timestamp).
+ *         schema:
+ *           type: string
+ *           example: "1637280000000"  # Example timestamp in milliseconds
+ *     responses:
+ *       200:
+ *         description: Successfully deleted the offering record.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message indicating the record was deleted.
+ *                   example: "Offering record deleted"
+ *       404:
+ *         description: Member or offering record not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the member or record was not found.
+ *                   example: "Member not found" or "Offering record not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Server error"
+ */
 router.delete('/:memberId/offerings/:recordId', async (req: Request, res: Response): Promise<void> => {
   try {
       const { memberId, recordId } = req.params;
@@ -807,6 +2096,56 @@ router.delete('/:memberId/offerings/:recordId', async (req: Request, res: Respon
   }
 });
 
+/**
+ * @swagger
+ * /verify/{token}:
+ *   get:
+ *     summary: Verify a user's email
+ *     description: Validates the provided verification token and updates the member's status to verified.
+ *     tags: [Verification]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         description: The verification token sent to the user for email verification.
+ *         schema:
+ *           type: string
+ *           example: "abc123verificationtoken"
+ *     responses:
+ *       200:
+ *         description: Email verified successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message indicating successful verification.
+ *                   example: "Email verified successfully!"
+ *       404:
+ *         description: Invalid verification token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating that the token is invalid.
+ *                   example: "Invalid verification token"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Generic error message.
+ *                   example: "Internal Server Error"
+ */
 router.get('/verify/:token', async (req: Request, res: Response): Promise<void> => {
     const { token } = req.params;
 
@@ -832,8 +2171,6 @@ router.get('/verify/:token', async (req: Request, res: Response): Promise<void> 
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
-
-
 
 export default router;
 

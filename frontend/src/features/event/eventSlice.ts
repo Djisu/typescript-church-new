@@ -16,13 +16,19 @@ export interface IEvent {
 
 export interface EventState {
   events: IEvent[];
-  loading: boolean;
+  loading:  'idle' | 'pending' | 'succeeded' | 'failed';
   error: string | null;
 }
+// interface MemberState {
+//   members: IMember[];
+//   currentMember: IMember | null; // State for the currently authenticated member
+//   loading: 'idle' | 'pending' | 'succeeded' | 'failed';
+//   error: string | null;
+// }
 
 const initialState: EventState = {
   events: [],
-  loading: false,
+  loading: 'idle',
   error: null,
 };
 
@@ -132,54 +138,54 @@ const eventSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(createEvent.pending, (state) => {
-        state.loading = true;
+        state.loading = 'pending';
         state.error = null;
       })
       .addCase(createEvent.fulfilled, (state, action: PayloadAction<IEvent>) => {
-        state.loading = false;
+        state.loading = 'succeeded';
         state.events.push(action.payload);
       })
       .addCase(createEvent.rejected, (state, action: PayloadAction<string | undefined>) => {
-        state.loading = false;
+        state.loading = 'failed';
         state.error = action.payload || "Error creating event";
       })
       .addCase(updateEvent.pending, (state) => {
-        state.loading = true;
+        state.loading = 'pending';
         state.error = null;
       })
       .addCase(updateEvent.fulfilled, (state, action: PayloadAction<IEvent>) => {
-        state.loading = false;
+        state.loading = 'succeeded';
         const index = state.events.findIndex((event) => event._id === action.payload._id);
         if (index !== -1) {
           state.events[index] = action.payload;
         }
       })
       .addCase(updateEvent.rejected, (state, action: PayloadAction<string | undefined>) => {
-        state.loading = false;
+        state.loading = 'failed';
         state.error = action.payload || "Error updating event";
       })
       .addCase(deleteEvent.pending, (state) => {
-        state.loading = true;
+        state.loading = 'pending';
         state.error = null;
       })
       .addCase(deleteEvent.fulfilled, (state, action: PayloadAction<string>) => {
-        state.loading = false;
+        state.loading = 'succeeded';
         state.events = state.events.filter((event) => event._id !== action.payload);
       })
       .addCase(deleteEvent.rejected, (state, action: PayloadAction<string | undefined>) => {
-        state.loading = false;
+        state.loading = 'failed';
         state.error = action.payload || "Error deleting event";
       })
       .addCase(searchEvents.pending, (state) => {
-        state.loading = true;
+        state.loading = 'pending';
         state.error = null;
       })
       .addCase(searchEvents.fulfilled, (state, action: PayloadAction<IEvent[]>) => {
-        state.loading = false;
+        state.loading = 'succeeded';
         state.events = action.payload;
       })
       .addCase(searchEvents.rejected, (state, action: PayloadAction<string | undefined>) => {
-        state.loading = false;
+        state.loading = 'failed';
         state.error = action.payload || "Error searching events";
       });
   },

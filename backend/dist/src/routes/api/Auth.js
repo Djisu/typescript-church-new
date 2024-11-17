@@ -31,6 +31,94 @@ else {
     console.log('Invalid node environment variable'); //.slice()
 }
 const router = express.Router();
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login user
+ *     description: Authenticates a user with email and password.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email of the user.
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: The password of the user (6 or more characters).
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Successful login, returns a token and user details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JSON Web Token for authentication.
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User's unique identifier.
+ *                       example: "60c72b2f9b1d8e1c4f1f4b1a"
+ *                     username:
+ *                       type: string
+ *                       description: User's username.
+ *                       example: "john_doe"
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                       description: User's email address.
+ *                       example: "user@example.com"
+ *                     role:
+ *                       type: string
+ *                       description: User's role in the system.
+ *                       example: "user"
+ *                     avatar:
+ *                       type: string
+ *                       description: URL to the user's avatar image.
+ *                       example: "https://example.com/avatar.jpg"
+ *       400:
+ *         description: Invalid credentials or validation errors.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       msg:
+ *                         type: string
+ *                         description: Error message.
+ *                         example: "Invalid Credentials"
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Server error"
+ */
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
@@ -74,6 +162,60 @@ router.post('/login', [
     }
 }));
 // Reset password
+/**
+ * @swagger
+ * /request-password-reset:
+ *   post:
+ *     summary: Request a password reset
+ *     description: Sends a password reset email to the user if the email exists in the database.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email of the user requesting the password reset.
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Successfully sent password reset email.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message.
+ *                   example: "Password reset email sent."
+ *       404:
+ *         description: User email not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "User email not found."
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('in backend Auth.ts/request-password-reset');
     const { email } = req.body;
@@ -93,6 +235,63 @@ router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, v
     }
 }));
 // Password reset
+/**
+ * @swagger
+ * /reset-password:
+ *   post:
+ *     summary: Reset user password
+ *     description: Resets the user's password using a valid reset token and a new password.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The password reset token sent to the user's email.
+ *                 example: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+ *               newPassword:
+ *                 type: string
+ *                 description: The new password to set for the user. Must be at least 6 characters long.
+ *                 example: "newPassword123"
+ *     responses:
+ *       200:
+ *         description: Successfully reset the password.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message.
+ *                   example: "Password has been reset successfully."
+ *       400:
+ *         description: Invalid request parameters or token issues.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Invalid token format."
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
 router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { token, newPassword } = req.body;
     console.log('in BACKEND Auth.ts  /reset-password', token, newPassword);
