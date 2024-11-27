@@ -1,17 +1,8 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import express from 'express';
 import mongoose from 'mongoose';
-import { Event } from '../../../models/Events.js';
-import { sendTextMessage } from '../../utils/textMessaging.js';
-import { Member } from '../../../models/Members.js';
+import { Event } from '../../../models/Events';
+import { sendTextMessage } from '../../utils/textMessaging';
+import { Member } from '../../../models/Members';
 //import sendResetEmailMember from '../../utils/email/sendResetEmailMember';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
@@ -40,9 +31,9 @@ const transport = nodemailer.createTransport({
     }
 });
 // Function to send an email
-const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
+const sendEmail = async (options) => {
     try {
-        yield transport.sendMail({
+        await transport.sendMail({
             from: emailUser,
             to: options.to,
             subject: options.subject,
@@ -54,7 +45,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
         console.error(`Failed to send email to ${options.to}:`, error);
         throw new Error(`Error sending email: ${options.to}`);
     }
-});
+};
 // Create a new 
 /**
  * @swagger
@@ -177,7 +168,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/create', async (req, res) => {
     console.log('in /create event backend');
     try {
         const newEvent = {
@@ -192,9 +183,9 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
             })),
         };
         // Create the new event
-        const createdEvent = yield Event.create(newEvent);
+        const createdEvent = await Event.create(newEvent);
         // Fetch all members to get their email addresses
-        const members = yield Member.find({}, 'email'); // Get only the email field
+        const members = await Member.find({}, 'email'); // Get only the email field
         // Prepare email details
         const emailPromises = members.map(member => {
             return sendEmail({
@@ -205,7 +196,7 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
         console.log('after emailPromises');
         // Send emails to all members
-        yield Promise.all(emailPromises);
+        await Promise.all(emailPromises);
         console.log('after Promise.all');
         // Respond with the created event
         res.status(201).json(createdEvent);
@@ -214,7 +205,7 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error('Error creating event or sending emails:', error);
         res.status(400).json({ message: error.message });
     }
-}));
+});
 // Update Event Registrations Endpoint
 /**
  * @swagger
@@ -307,11 +298,11 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/register', async (req, res) => {
     const { memberId, eventId, registeredAt } = req.body;
     try {
         // Find the event by ID
-        const event = yield Event.findById(eventId);
+        const event = await Event.findById(eventId);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
             return;
@@ -328,11 +319,11 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
             registeredAt: new Date(registeredAt),
         });
         // Save the updated event
-        const updatedEvent = yield event.save();
+        const updatedEvent = await event.save();
         // Optionally, you can send a confirmation email to the member (if you have their email)
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (member) {
-            yield sendEmail({
+            await sendEmail({
                 to: member.email,
                 subject: `Registration Confirmed: ${updatedEvent.title}`,
                 text: `You have successfully registered for the following event:\n\nTitle: ${updatedEvent.title}\nDescription: ${updatedEvent.description}\nStart Date: ${updatedEvent.startDate}\nEnd Date: ${updatedEvent.endDate}\nLocation: ${updatedEvent.location}`
@@ -346,7 +337,7 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(400).json({ message: error.message });
         return;
     }
-}));
+});
 // Get all events
 /**
  * @swagger
@@ -417,16 +408,16 @@ router.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, functio
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', async (req, res) => {
     try {
         console.log('in backend router.get');
-        const events = yield Event.find();
+        const events = await Event.find();
         res.json(events);
     }
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Get a specific event by ID
 /**
  * @swagger
@@ -514,9 +505,9 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:id', async (req, res) => {
     try {
-        const event = yield Event.findById(req.params.id);
+        const event = await Event.findById(req.params.id);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
         }
@@ -527,7 +518,7 @@ router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Update an event
 /**
  * @swagger
@@ -669,9 +660,9 @@ router.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:id', async (req, res) => {
     try {
-        const updatedEvent = yield Event.findByIdAndUpdate(req.params.id, {
+        const updatedEvent = await Event.findByIdAndUpdate(req.params.id, {
             title: req.body.title,
             description: req.body.description,
             startDate: req.body.startDate,
@@ -687,7 +678,7 @@ router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 // Delete an 
 /**
  * @swagger
@@ -739,9 +730,9 @@ router.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:id', async (req, res) => {
     try {
-        const event = yield Event.findByIdAndDelete(req.params.id);
+        const event = await Event.findByIdAndDelete(req.params.id);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
         }
@@ -752,7 +743,7 @@ router.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* 
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Send text message to event registrants
 /**
  * @swagger
@@ -826,9 +817,9 @@ router.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* 
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.post('/:id/send-message', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/:id/send-message', async (req, res) => {
     try {
-        const event = yield Event.findById(req.params.id);
+        const event = await Event.findById(req.params.id);
         if (!event) {
             res.status(404).json({ message: 'Event not found' });
         }
@@ -840,14 +831,14 @@ router.post('/:id/send-message', (req, res) => __awaiter(void 0, void 0, void 0,
             // Get the phone numbers of the registered members
             const phoneNumbers = event.registrations.map(reg => reg.memberId.toString());
             // Send text messages to the registered members
-            yield Promise.all(phoneNumbers.map(phoneNumber => sendTextMessage(phoneNumber, message)));
+            await Promise.all(phoneNumbers.map(phoneNumber => sendTextMessage(phoneNumber, message)));
             res.json({ message: 'Text messages sent successfully' });
         }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 export default router;
 // function sendEmail(arg0: { to: string; subject: string; text: string; }): any {
 //   throw new Error('Function not implemented.');

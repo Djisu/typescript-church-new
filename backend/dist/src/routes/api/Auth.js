@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import express from 'express';
 // import expressValidator from 'express-validator';
 // const { check, validationResult } = expressValidator;
@@ -122,7 +113,7 @@ const router = express.Router();
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
-], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+], async (req, res) => {
     console.log('Route hit backend');
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -130,13 +121,13 @@ router.post('/login', [
     }
     const { email, password } = req.body;
     try {
-        const user = yield User.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user) {
             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
             return;
         }
         if (user) {
-            const isMatch = yield user.comparePassword(password);
+            const isMatch = await user.comparePassword(password);
             if (!isMatch) {
                 res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
                 return;
@@ -160,7 +151,7 @@ router.post('/login', [
         console.error('Error in /api/auth/login route:', err);
         res.status(500).json({ error: 'Server error' });
     }
-}));
+});
 // Reset password
 /**
  * @swagger
@@ -216,11 +207,11 @@ router.post('/login', [
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/request-password-reset', async (req, res) => {
     console.log('in backend Auth.ts/request-password-reset');
     const { email } = req.body;
     console.log('email: ', email);
-    const user = yield User.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
         res.status(404).json({ message: 'User email not found.' });
     }
@@ -228,12 +219,12 @@ router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, v
     if (user) {
         user.resetToken = token; // Save token to user record
         user.resetTokenExpiration = new Date(Date.now() + 25200000); // 1 hour expiration
-        yield user.save();
+        await user.save();
         console.log('after user token reset');
-        yield sendResetEmailUser(email, token); // Function to send email
+        await sendResetEmailUser(email, token); // Function to send email
         res.status(200).json({ message: 'Password reset email sent.' });
     }
-}));
+});
 // Password reset
 /**
  * @swagger
@@ -292,7 +283,7 @@ router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, v
  *                   description: Error message.
  *                   example: "Internal server error"
  */
-router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
     console.log('in BACKEND Auth.ts  /reset-password', token, newPassword);
     const isValidTokenFormat = (token) => /^[a-f0-9]{64}$/.test(token); // Adjust regex based on token length
@@ -300,7 +291,7 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(400).json({ message: 'Invalid token format.' });
         return;
     }
-    const userCheck = yield User.findOne({ resetToken: token });
+    const userCheck = await User.findOne({ resetToken: token });
     if (!userCheck) {
         res.status(400).json({ message: 'Token not found.' });
         return;
@@ -310,7 +301,7 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(400).json({ message: 'Token does not match.' });
         return;
     }
-    const user = yield User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+    const user = await User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
     if (!user) {
         res.status(400).json({ message: 'Invalid or expired token.' });
     }
@@ -324,14 +315,14 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(400).json({ message: 'Password must be at least 6 characters long.' });
     }
     // Hash the password
-    const salt = yield bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10);
     if (user) {
-        user.password = yield bcrypt.hash(newPassword, salt);
+        user.password = await bcrypt.hash(newPassword, salt);
         user.resetToken = undefined; // Clear the token
         user.resetTokenExpiration = undefined; // Clear expiration
-        yield user.save();
+        await user.save();
         res.status(200).json({ message: 'Password has been reset successfully.' });
     }
-}));
+});
 export default router;
 //# sourceMappingURL=Auth.js.map

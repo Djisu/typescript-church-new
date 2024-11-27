@@ -2,11 +2,11 @@ import express, { Request, Response } from 'express';
 import multer, { diskStorage, Multer } from 'multer';
 import path from 'path';
 import fs from 'fs';
-import usersData from '../../usersData';
-import { check, validationResult } from 'express-validator';
+// import usersData from '../../usersData';
+// import { check, validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
 
-import { User, IUser, UserSchema } from '../../../models/Users.js';
+import { User, IUser, UserSchema } from '../../../models/Users';
 
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname, join } from 'path';

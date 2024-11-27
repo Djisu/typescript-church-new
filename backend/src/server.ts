@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import  * as dotenv from 'dotenv';
 import express, { Request, Response, Express, NextFunction  } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -6,10 +6,10 @@ import swaggerUi from 'swagger-ui-express';
 //import swaggerDocs from './config/swagger';
 
 import multer, { diskStorage, StorageEngine } from 'multer'; // Use lowercase 'multer'
-import eventsRoute from './routes/api/Events.js';
-import membersRoute from './routes/api/Members.js';
-import usersRoute from './routes/api/Users.js';
-import authRoute from './routes/api/Auth.js';
+import Events from './routes/api/Events.js';
+import Members from './routes/api/Members.js';
+import Users from './routes/api/Users.js';
+import Auth from './routes/api/Auth.js';
 
 import colors from 'colors';
 import { ConnectOptions } from 'mongoose';
@@ -17,7 +17,8 @@ import path  from 'path';
 import morgan from 'morgan';
 
 import { fileURLToPath } from 'url';
-import { dirname as pathDirname, join } from 'path';
+//import { dirname as pathDirname } from 'path';
+
 import swaggerJSDoc from 'swagger-jsdoc';
 
 mongoose.set('strictQuery', false);
@@ -92,10 +93,10 @@ console.log('swaggerDocs: ', swaggerDocs);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Define routes
-app.use('/api/events', eventsRoute);
-app.use('/api/members', membersRoute);
-app.use('/api/users', usersRoute);
-app.use('/api/auth', authRoute);
+app.use('/api/events', Events);
+app.use('/api/members', Members);
+app.use('/api/users', Users);
+app.use('/api/auth', Auth);
 
 // Enable pre-flight across-the-board for all routes
 app.options('*', cors());
@@ -107,8 +108,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Serve static files from the frontend build directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = pathDirname(__filename);
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = pathDirname(__filename);
 
 const frontendPath = '/Users/pauljesufleischer/typescript-church/frontend/dist';
 
@@ -172,4 +173,4 @@ process.on('SIGINT', () => {
 });
 
 
-
+export default app;

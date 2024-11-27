@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "Avenir",
+        "captiveportal",
         "churchsoft",
         "detokenize",
         "detokenized",
@@ -9,6 +10,7 @@
         "Errorx",
         "fileupload",
         "hubtel",
+        "Kavg",
         "listevents",
         "listmember",
         "listmembers",
@@ -27,8 +29,12 @@
         "requestpasswordreset",
         "resetpassword",
         "sourcery",
+        "testpassword",
         "tokenx",
+        "Tzxoqi",
         "userpage",
-        "uuidv"
+        "uuidv",
+        "verificationtoken",
+        "wrongpassword"
     ]
 }

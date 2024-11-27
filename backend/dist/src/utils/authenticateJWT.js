@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
 const authenticateJWT = (req, res, next) => {
-    var _a;
     console.log('process.env.JWT_SECRET: ', process.env.JWT_SECRET);
-    const token = (_a = req.header('Authorization')) === null || _a === void 0 ? void 0 : _a.split(' ')[1]; // Bearer <token>
+    const token = req.header('Authorization')?.split(' ')[1]; // Bearer <token>
     console.log('backend: token', token);
     console.log('backend: in authenticateJWT');
     if (!token) {

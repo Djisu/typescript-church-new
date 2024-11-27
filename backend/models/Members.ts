@@ -29,7 +29,7 @@ export interface IMember extends Document {
   comparePassword(password: string): Promise<boolean>;
 }
 
-const MemberSchema: Schema = new Schema({
+export const MemberSchema: Schema = new Schema({
   userName: { type: String, required: true},
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
@@ -82,3 +82,4 @@ MemberSchema.methods.comparePassword = async function(password: string): Promise
 };
 
 export const Member = mongoose.model<IMember>('Member', MemberSchema);
+//export default Member;

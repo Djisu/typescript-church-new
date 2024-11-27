@@ -31,6 +31,8 @@ import { IEvent } from './types'; // Import from shared types
 import './index.css';
 import { useAppSelector } from './app/hooks';
 import { RootState } from './app/store';
+import CaptivePortal from './features/member/captivePortal'
+
 
 const AppContainer = styled.div`
   display: flex;
@@ -73,6 +75,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Landing />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/request-password-reset" element={<RequestPasswordReset />} />
+            <Route path="/captiveportal" element={<CaptivePortal/>} />
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>

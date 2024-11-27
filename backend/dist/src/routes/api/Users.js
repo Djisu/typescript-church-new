@@ -1,18 +1,11 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import express from 'express';
 import multer, { diskStorage } from 'multer';
 import path from 'path';
 import fs from 'fs';
+// import usersData from '../../usersData';
+// import { check, validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
-import { User } from '../../../models/Users.js';
+import { User } from '../../../models/Users';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname } from 'path';
 const router = express.Router();
@@ -68,7 +61,7 @@ const upload = multer({ storage });
  *                   description: Error message indicating the reason for the failure.
  *                   example: "Error message"
  */
-router.post('/seed', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/seed', async (req, res) => {
     // console.log('Received /seed request')
     // try {
     //   await User.deleteMany({});
@@ -77,7 +70,7 @@ router.post('/seed', (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // } catch (error: any) {
     //   res.status(500).json({ error: error.message });
     // }
-}));
+});
 // Create a new user
 /**
  * @swagger
@@ -167,8 +160,7 @@ router.post('/seed', (req, res) => __awaiter(void 0, void 0, void 0, function* (
  *                   description: Generic error message.
  *                   example: "An error occurred during registration"
  */
-router.post('/', upload.single('avatar'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+router.post('/', upload.single('avatar'), async (req, res) => {
     console.log('Hit /register');
     console.log('Received request on /register');
     console.log('Request Body:', req.body);
@@ -176,22 +168,22 @@ router.post('/', upload.single('avatar'), (req, res) => __awaiter(void 0, void 0
     try {
         const { username, email, password, role } = req.body;
         // Check if user exists
-        let user = yield User.findOne({ email: email });
+        let user = await User.findOne({ email: email });
         if (user) {
             res.status(400).json({ errors: [{ msg: 'User already exists' }] });
         }
         // Hash the password
-        const salt = yield bcrypt.genSalt(10);
-        const hashedPassword = yield bcrypt.hash(password, salt);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
         // Create the new user
-        user = yield User.create({ username, email, password: hashedPassword, role, avatar: (_a = req.file) === null || _a === void 0 ? void 0 : _a.path, });
+        user = await User.create({ username, email, password: hashedPassword, role, avatar: req.file?.path, });
         res.status(201).json(user);
     }
     catch (err) {
         console.error('Error processing file upload:', err); // Log the error
         res.status(500).json({ message: 'An error occurred during registration', error: err.message });
     }
-}));
+});
 // Get all users
 /**
  * @swagger
@@ -239,10 +231,10 @@ router.post('/', upload.single('avatar'), (req, res) => __awaiter(void 0, void 0
  *                   description: Generic error message.
  *                   example: "An error occurred while retrieving users"
  */
-router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', async (req, res) => {
     console.log('in router.get(/users)');
     try {
-        const users = yield User.find({});
+        const users = await User.find({});
         if (!users) {
             console.log('Users not found!!!!!');
         }
@@ -252,7 +244,7 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Get a specific user
 /**
  * @swagger
@@ -317,10 +309,10 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
  *                   description: Generic error message.
  *                   example: "An error occurred while retrieving the user"
  */
-router.get('/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const user = yield User.findById(userId);
+        const user = await User.findById(userId);
         console.log('in router.get(/:userId): ' + req.params.userId);
         if (!user) {
             res.status(404).json({ message: 'User not found' });
@@ -333,7 +325,7 @@ router.get('/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function*
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Update a user
 /**
  * @swagger
@@ -426,10 +418,10 @@ router.get('/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function*
  *                   description: Error message indicating the reason for the bad request.
  *                   example: "Validation failed"
  */
-router.put('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/users/:userId', async (req, res) => {
     try {
         const { username, email, password, role, avatar } = req.body;
-        const user = yield User.findByIdAndUpdate(req.params.userId, { username, email, password, role, avatar }, { new: true, runValidators: true });
+        const user = await User.findByIdAndUpdate(req.params.userId, { username, email, password, role, avatar }, { new: true, runValidators: true });
         if (!user) {
             res.status(404).json({ message: 'User not found' });
         }
@@ -440,7 +432,7 @@ router.put('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, fun
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 // Delete a user
 /**
  * @swagger
@@ -492,9 +484,9 @@ router.put('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, fun
  *                   description: Generic error message indicating the reason for the failure.
  *                   example: "An error occurred while deleting the user"
  */
-router.delete('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/users/:userId', async (req, res) => {
     try {
-        const user = yield User.findByIdAndDelete(req.params.userId);
+        const user = await User.findByIdAndDelete(req.params.userId);
         if (!user) {
             res.status(404).json({ message: 'User not found' });
         }
@@ -505,6 +497,6 @@ router.delete('/users/:userId', (req, res) => __awaiter(void 0, void 0, void 0, 
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 export default router;
 //# sourceMappingURL=Users.js.map

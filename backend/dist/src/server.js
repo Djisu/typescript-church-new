@@ -1,27 +1,17 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import swaggerUi from 'swagger-ui-express';
 //import swaggerDocs from './config/swagger';
 import multer, { diskStorage } from 'multer'; // Use lowercase 'multer'
-import eventsRoute from './routes/api/Events.js';
-import membersRoute from './routes/api/Members.js';
-import usersRoute from './routes/api/Users.js';
-import authRoute from './routes/api/Auth.js';
+import Events from './routes/api/Events.js';
+import Members from './routes/api/Members.js';
+import Users from './routes/api/Users.js';
+import Auth from './routes/api/Auth.js';
 import path from 'path';
 import morgan from 'morgan';
-import { fileURLToPath } from 'url';
-import { dirname as pathDirname } from 'path';
+//import { dirname as pathDirname } from 'path';
 import swaggerJSDoc from 'swagger-jsdoc';
 mongoose.set('strictQuery', false);
 mongoose.set('debug', true);
@@ -80,10 +70,10 @@ console.log('swaggerDocs: ', swaggerDocs);
 // Serve Swagger docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // Define routes
-app.use('/api/events', eventsRoute);
-app.use('/api/members', membersRoute);
-app.use('/api/users', usersRoute);
-app.use('/api/auth', authRoute);
+app.use('/api/events', Events);
+app.use('/api/members', Members);
+app.use('/api/users', Users);
+app.use('/api/auth', Auth);
 // Enable pre-flight across-the-board for all routes
 app.options('*', cors());
 // Default route
@@ -91,8 +81,8 @@ app.get('/', (req, res) => {
     res.send('Welcome to the API!');
 });
 // Serve static files from the frontend build directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = pathDirname(__filename);
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = pathDirname(__filename);
 const frontendPath = '/Users/pauljesufleischer/typescript-church/frontend/dist';
 app.use(express.static(frontendPath));
 //app.use(express.static(path.join(__dirname, '../frontend/dist')));
@@ -128,10 +118,10 @@ app.get('*', (req, res) => {
 });
 // Start the server
 //const port = process.env.PORT || 3000;
-app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
+app.listen(port, async () => {
     console.log(`Server is running on port ${port}`);
     //await connectDB(); // Connect to MongoDB here
-}));
+});
 //connectDB()
 // Handle process signals
 process.once('SIGUSR2', () => {
@@ -141,4 +131,5 @@ process.on('SIGINT', () => {
     // Perform any cleanup tasks or shutdown operations here
     process.exit(0);
 });
+export default app;
 //# sourceMappingURL=server.js.map

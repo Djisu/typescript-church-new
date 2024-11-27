@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { Member, IMember } from '../../../models/Members.js';
+import { Member, IMember } from '../../../models/Members';
 import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
 import { check, validationResult } from 'express-validator';
 
@@ -9,10 +9,10 @@ import mongoose from 'mongoose';
 
 import jwt from 'jsonwebtoken';
 
-import { sendResetEmailMember } from '../../utils/emailMember.js';
-import authenticateJWT from '../../utils/authenticateJWT.js';
+import { sendResetEmailMember } from '../../utils/emailMember';
+import authenticateJWT from '../../utils/authenticateJWT';
 
-import config from '../../utils/config.js';
+import config from '../../utils/config';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -42,6 +42,106 @@ const transport = nodemailer.createTransport({
       pass: appPassword  //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD', 
     }
   });
+
+/**
+ * @swagger
+ * /capture-phone:
+ *   post:
+ *     summary: Capture Phone Number
+ *     description: Captures the member's phone number and logs attendance if consent is provided.
+ *     tags: [Attendance]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               consent:
+ *                 type: boolean
+ *                 description: User's consent to share their phone number.
+ *                 example: true
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The member's phone number.
+ *                 example: "+1234567890"
+ *     responses:
+ *       200:
+ *         description: Attendance recorded successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: string
+ *               example: "Attendance recorded successfully"
+ *       400:
+ *         description: Consent required or invalid request.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Consent required"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
+// Endpoint to capture phone number
+router.post('/capture-phone', async (req: Request, res: Response): Promise<void> => {
+    const { consent } = req.body;
+
+    if (!consent) {
+       res.status(400).send('Consent required');
+       return
+    }
+
+    // Capture phone number logic here (replace with actual capture logic)
+    const phoneNumber = req.body.phoneNumber; // Replace with actual logic
+
+    // Check for phone number
+    if (!phoneNumber) {
+        res.status(400).json({ error: 'Phone number is required' });
+        return;
+    }
+
+    // Find the member based on the phone number
+    const member = await Member.findOne({ phone: phoneNumber });
+
+    if (member) {
+        // Update attendance record
+        member.attendanceRecord.push({
+            date: new Date(),
+            attended: true,
+        });
+        await member.save();
+        res.status(200).send('Attendance recorded successfully');
+        return
+    } else {
+        res.status(404).send('Member not found');
+        return
+    }
+});  
   
 /**
  * @swagger

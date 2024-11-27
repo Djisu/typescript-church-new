@@ -1,8 +1,10 @@
 {
     "compilerOptions": {
-      "target": "es6",
-      "module": "esnext",
-      "outDir": "dist",
+      "target": "ESnext", // or "esnext"
+      "module": "ESnext", // Update this line
+      "outDir": "./dist",
+      "resolveJsonModule": true,
+      "noEmit": false,
       "strict": true,
       "esModuleInterop": true,
       "moduleResolution": "node",
@@ -12,9 +14,9 @@
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
       "typeRoots": ["src/@types", "node_modules/@types"],
-      "types": ["node", "express", "multer"]
+      "types": ["node", "express", "multer", "jest"]
     },
-    "include": ["src/**/*", "src/types.d.ts"],
+    "include": ["src/**/*", "src/types.d.ts", "tests/**/*"],
     "exclude": [
       "node_modules",
       "dist"

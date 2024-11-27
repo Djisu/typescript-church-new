@@ -1,23 +1,14 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import express from 'express';
-import { Member } from '../../../models/Members.js';
+import { Member } from '../../../models/Members';
 import nodemailer from 'nodemailer';
 import { check, validationResult } from 'express-validator';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { sendResetEmailMember } from '../../utils/emailMember.js';
-import authenticateJWT from '../../utils/authenticateJWT.js';
-import config from '../../utils/config.js';
+import { sendResetEmailMember } from '../../utils/emailMember';
+import authenticateJWT from '../../utils/authenticateJWT';
+import config from '../../utils/config';
 import dotenv from 'dotenv';
 dotenv.config();
 let frontendUrl = ""; //process.env.FRONTEND_URL; // Access the environment variable
@@ -41,6 +32,101 @@ const transport = nodemailer.createTransport({
     auth: {
         user: emailUser,
         pass: appPassword //'YOUR_GMAIL_PASSWORD_OR_APP_PASSWORD', 
+    }
+});
+/**
+ * @swagger
+ * /capture-phone:
+ *   post:
+ *     summary: Capture Phone Number
+ *     description: Captures the member's phone number and logs attendance if consent is provided.
+ *     tags: [Attendance]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               consent:
+ *                 type: boolean
+ *                 description: User's consent to share their phone number.
+ *                 example: true
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The member's phone number.
+ *                 example: "+1234567890"
+ *     responses:
+ *       200:
+ *         description: Attendance recorded successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: string
+ *               example: "Attendance recorded successfully"
+ *       400:
+ *         description: Consent required or invalid request.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Consent required"
+ *       404:
+ *         description: Member not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Member not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message.
+ *                   example: "Internal server error"
+ */
+// Endpoint to capture phone number
+router.post('/capture-phone', async (req, res) => {
+    const { consent } = req.body;
+    if (!consent) {
+        res.status(400).send('Consent required');
+        return;
+    }
+    // Capture phone number logic here (replace with actual capture logic)
+    const phoneNumber = req.body.phoneNumber; // Replace with actual logic
+    // Check for phone number
+    if (!phoneNumber) {
+        res.status(400).json({ error: 'Phone number is required' });
+        return;
+    }
+    // Find the member based on the phone number
+    const member = await Member.findOne({ phone: phoneNumber });
+    if (member) {
+        // Update attendance record
+        member.attendanceRecord.push({
+            date: new Date(),
+            attended: true,
+        });
+        await member.save();
+        res.status(200).send('Attendance recorded successfully');
+        return;
+    }
+    else {
+        res.status(404).send('Member not found');
+        return;
     }
 });
 /**
@@ -127,7 +213,7 @@ const transport = nodemailer.createTransport({
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
-], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+], async (req, res) => {
     console.log('Route member /login');
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -135,7 +221,7 @@ router.post('/login', [
     }
     const { email, password } = req.body;
     try {
-        const member = yield Member.findOne({ email });
+        const member = await Member.findOne({ email });
         if (!member) {
             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
             return;
@@ -146,7 +232,7 @@ router.post('/login', [
         }
         if (member) {
             console.log('member found!!');
-            const isMatch = yield member.comparePassword(password);
+            const isMatch = await member.comparePassword(password);
             if (!isMatch) {
                 res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
                 return;
@@ -173,7 +259,7 @@ router.post('/login', [
         console.error('Error in /api/auth/login route:', err);
         res.status(500).json({ error: 'Server error' });
     }
-}));
+});
 // Request for Reset password
 /**
  * @swagger
@@ -228,11 +314,11 @@ router.post('/login', [
  *                   description: Error message.
  *                   example: "Server error"
  */
-router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/request-password-reset', async (req, res) => {
     console.log('in backend Member.ts /request-password-reset');
     const { email } = req.body;
     console.log('email: ', email);
-    const member = yield Member.findOne({ email });
+    const member = await Member.findOne({ email });
     if (!member) {
         res.status(404).json({ message: 'Member Email not found.' });
     }
@@ -250,12 +336,12 @@ router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, v
         // Assign the new token and set the expiration time
         member.resetToken = token; // Save token to member record
         member.resetTokenExpiration = new Date(Date.now() + 25200000); // 7 hours expiration
-        yield member.save();
+        await member.save();
         console.log('after member token reset');
-        yield sendResetEmailMember(email, token); // Function to send email
+        await sendResetEmailMember(email, token); // Function to send email
         res.status(200).json({ message: 'Password reset email sent.' });
     }
-}));
+});
 // Password reset
 /**
  * @swagger
@@ -325,7 +411,7 @@ router.post('/request-password-reset', (req, res) => __awaiter(void 0, void 0, v
  *                   description: Error message.
  *                   example: "Server error"
  */
-router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/reset-password', async (req, res) => {
     // console.log('in Member.ts /reset-password')
     const { token, newPassword } = req.body;
     console.log('in BACKEND Member.ts  /reset-password', token, newPassword);
@@ -334,7 +420,7 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(400).json({ message: 'Invalid token format.' });
         return;
     }
-    const memberCheck = yield Member.findOne({ resetToken: token });
+    const memberCheck = await Member.findOne({ resetToken: token });
     if (!memberCheck) {
         res.status(400).json({ message: 'Token not found.' });
         return;
@@ -345,7 +431,7 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
         return;
     }
     console.log('after token check');
-    const member = yield Member.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+    const member = await Member.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
     if (!member) {
         res.status(400).json({ message: 'Invalid or expired token.' });
     }
@@ -355,15 +441,15 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(400).json({ message: 'Password must be at least 6 characters long.' });
     }
     // Hash the password
-    const salt = yield bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10);
     if (member) {
-        member.password = yield bcrypt.hash(newPassword, salt);
+        member.password = await bcrypt.hash(newPassword, salt);
         member.resetToken = undefined;
         member.resetTokenExpiration = undefined;
-        yield member.save();
+        await member.save();
         res.status(200).json({ message: 'Password has been reset successfully.' });
     }
-}));
+});
 /**
  * @swagger
  * /create:
@@ -462,14 +548,14 @@ router.post('/reset-password', (req, res) => __awaiter(void 0, void 0, void 0, f
  *                   description: Error message.
  *                   example: "Error sending email"
  */
-router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/create', async (req, res) => {
     console.log('in create member ');
     console.log('Incoming request body:', req.body);
     console.log('port:', port);
     try {
         let { firstName, lastName, email, password, userName, role } = req.body;
         // Check if the user already exists
-        const existingUser = yield Member.findOne({ email });
+        const existingUser = await Member.findOne({ email });
         if (existingUser) {
             console.log('User already exists');
             res.status(400).json({ message: 'User already exists' });
@@ -479,8 +565,8 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
         // Create a verification token
         const verificationToken = crypto.randomBytes(32).toString('hex');
         // Hash the password
-        const salt = yield bcrypt.genSalt(10);
-        const hashedPassword = yield bcrypt.hash(password, salt);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
         console.log('hashedPassword generated');
         // Create initial member data
         const initialMemberData = {
@@ -501,7 +587,7 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
         };
         // Create and save the new member
         const newMember = new Member(initialMemberData);
-        yield newMember.save();
+        await newMember.save();
         console.log('new member created');
         // Send verification email frontendUrl
         const verificationLink = `${frontendUrl}/verify-email/${verificationToken}?env=${nodeEnv}`;
@@ -526,7 +612,7 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error('Error:', error);
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /:
@@ -584,15 +670,15 @@ router.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function*
  *                   description: Error message.
  *                   example: "Server error"
  */
-router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', async (req, res) => {
     try {
-        const members = yield Member.find({});
+        const members = await Member.find({});
         res.json(members);
     }
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}:
@@ -663,9 +749,9 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:memberId', async (req, res) => {
     try {
-        const member = yield Member.findById(req.params.memberId);
+        const member = await Member.findById(req.params.memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -674,7 +760,7 @@ router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}:
@@ -797,7 +883,7 @@ router.get('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, functio
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.put('/:memberId', authenticateJWT, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:memberId', authenticateJWT, async (req, res) => {
     console.log('backend in update member');
     console.log('Incoming request body:', req.body);
     console.log('req.params.memberId:', req.params.memberId);
@@ -811,7 +897,7 @@ router.put('/:memberId', authenticateJWT, (req, res) => __awaiter(void 0, void 0
     try {
         console.log('about to check for member existence');
         // First, check if the member exists
-        const existingMember = yield Member.findById(req.params.memberId);
+        const existingMember = await Member.findById(req.params.memberId);
         console.log('after checking for member existence', existingMember);
         if (!existingMember) {
             res.status(404).json({ message: 'Member not found' });
@@ -819,7 +905,7 @@ router.put('/:memberId', authenticateJWT, (req, res) => __awaiter(void 0, void 0
         }
         // Now proceed to update the member
         console.log('about to update member');
-        const updatedMember = yield Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
+        const updatedMember = await Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true, runValidators: true });
         console.log('Updated member:', updatedMember);
         res.json(updatedMember);
     }
@@ -827,7 +913,7 @@ router.put('/:memberId', authenticateJWT, (req, res) => __awaiter(void 0, void 0
         console.error('Update error:', error); // Log the error
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}:
@@ -878,9 +964,9 @@ router.put('/:memberId', authenticateJWT, (req, res) => __awaiter(void 0, void 0
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.delete('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:memberId', async (req, res) => {
     try {
-        const member = yield Member.findByIdAndDelete(req.params.memberId);
+        const member = await Member.findByIdAndDelete(req.params.memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -889,7 +975,7 @@ router.delete('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, func
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/attendance:
@@ -972,7 +1058,7 @@ router.delete('/:memberId', (req, res) => __awaiter(void 0, void 0, void 0, func
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/:memberId/attendance', async (req, res) => {
     console.log('in router.post(/:memberId/attendance');
     try {
         const { memberId } = req.params;
@@ -981,20 +1067,20 @@ router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, voi
             res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, attended } = req.body;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
         if (member) {
             member.attendanceRecord.push({ date, attended });
-            yield member.save();
+            await member.save();
             res.status(201).json(member.attendanceRecord[member.attendanceRecord.length - 1]);
         }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/attendance:
@@ -1052,10 +1138,10 @@ router.post('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, voi
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.get('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:memberId/attendance', async (req, res) => {
     try {
         const { memberId } = req.params;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1066,7 +1152,7 @@ router.get('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/attendance/{recordId}:
@@ -1156,11 +1242,11 @@ router.get('/:memberId/attendance', (req, res) => __awaiter(void 0, void 0, void
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:memberId/attendance/:recordId', async (req, res) => {
     try {
         const { memberId, recordId } = req.params;
         const { date, attended } = req.body;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1173,14 +1259,14 @@ router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, vo
                 record.date = date;
                 record.attended = attended;
             }
-            yield member.save();
+            await member.save();
             res.json(record);
         }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/attendance/{recordId}:
@@ -1238,10 +1324,10 @@ router.put('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, vo
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.delete('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:memberId/attendance/:recordId', async (req, res) => {
     try {
         const { memberId, recordId } = req.params;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1251,14 +1337,14 @@ router.delete('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0,
                 res.status(404).json({ message: 'Attendance record not found' });
             }
             member.attendanceRecord.splice(recordIndex, 1);
-            yield member.save();
+            await member.save();
             res.json({ message: 'Attendance record deleted' });
         }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Additional routes for tithes and offerings can follow the same pattern.
 // Ensure to add TSDoc comments similar to the examples above for those routes as well.
 // Tithe
@@ -1344,7 +1430,7 @@ router.delete('/:memberId/attendance/:recordId', (req, res) => __awaiter(void 0,
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/:memberId/tithes', async (req, res) => {
     console.log('in router.post(/:memberId/tithes');
     try {
         const { memberId } = req.params;
@@ -1353,20 +1439,20 @@ router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0,
             res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, amount } = req.body;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
         if (member) {
             member.tithes.push({ date, amount });
-            yield member.save();
+            await member.save();
             res.status(201).json(member.tithes[member.tithes.length - 1]);
         }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/tithes:
@@ -1424,10 +1510,10 @@ router.post('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0,
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.get('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:memberId/tithes', async (req, res) => {
     try {
         const { memberId } = req.params;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1438,7 +1524,7 @@ router.get('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, 
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/tithes/{recordId}:
@@ -1528,11 +1614,11 @@ router.get('/:memberId/tithes', (req, res) => __awaiter(void 0, void 0, void 0, 
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:memberId/tithes/:recordId', async (req, res) => {
     try {
         const { memberId, recordId } = req.params;
         const { date, amount } = req.body;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1544,7 +1630,7 @@ router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0
             if (record) {
                 record.date = date;
                 record.amount = amount;
-                yield member.save();
+                await member.save();
                 res.json(record);
             }
         }
@@ -1552,7 +1638,7 @@ router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/tithes/{recordId}:
@@ -1610,10 +1696,10 @@ router.put('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.delete('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:memberId/tithes/:recordId', async (req, res) => {
     try {
         const { memberId, recordId } = req.params;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1623,14 +1709,14 @@ router.delete('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, voi
                 res.status(404).json({ message: 'Tithe record not found' });
             }
             member.tithes.splice(recordIndex, 1);
-            yield member.save();
+            await member.save();
             res.json({ message: 'Tithe record deleted' });
         }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 // Offerings
 /**
  * @swagger
@@ -1714,7 +1800,7 @@ router.delete('/:memberId/tithes/:recordId', (req, res) => __awaiter(void 0, voi
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/:memberId/offerings', async (req, res) => {
     console.log('in router.post(/:memberId/offerings');
     try {
         const { memberId } = req.params;
@@ -1723,20 +1809,20 @@ router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void
             res.status(400).json({ message: 'Invalid member ID format' });
         }
         const { date, amount } = req.body;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
         if (member) {
             member.offerings.push({ date, amount });
-            yield member.save();
+            await member.save();
             res.status(201).json(member.tithes[member.offerings.length - 1]);
         }
     }
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/offerings:
@@ -1794,10 +1880,10 @@ router.post('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.get('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:memberId/offerings', async (req, res) => {
     try {
         const { memberId } = req.params;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1808,7 +1894,7 @@ router.get('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/offerings/{recordId}:
@@ -1898,11 +1984,11 @@ router.get('/:memberId/offerings', (req, res) => __awaiter(void 0, void 0, void 
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:memberId/offerings/:recordId', async (req, res) => {
     try {
         const { memberId, recordId } = req.params;
         const { date, amount } = req.body;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1914,7 +2000,7 @@ router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, voi
             if (record) {
                 record.date = date;
                 record.amount = amount;
-                yield member.save();
+                await member.save();
                 res.json(record);
             }
         }
@@ -1922,7 +2008,7 @@ router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, voi
     catch (error) {
         res.status(400).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /{memberId}/offerings/{recordId}:
@@ -1980,10 +2066,10 @@ router.put('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, voi
  *                   description: Generic error message.
  *                   example: "Server error"
  */
-router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:memberId/offerings/:recordId', async (req, res) => {
     try {
         const { memberId, recordId } = req.params;
-        const member = yield Member.findById(memberId);
+        const member = await Member.findById(memberId);
         if (!member) {
             res.status(404).json({ message: 'Member not found' });
         }
@@ -1993,14 +2079,14 @@ router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, 
                 res.status(404).json({ message: 'Offerings record not found' });
             }
             member.offerings.splice(recordIndex, 1);
-            yield member.save();
+            await member.save();
             res.json({ message: 'Offering record deleted' });
         }
     }
     catch (error) {
         res.status(500).json({ message: error.message });
     }
-}));
+});
 /**
  * @swagger
  * /verify/{token}:
@@ -2051,12 +2137,12 @@ router.delete('/:memberId/offerings/:recordId', (req, res) => __awaiter(void 0, 
  *                   description: Generic error message.
  *                   example: "Internal Server Error"
  */
-router.get('/verify/:token', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/verify/:token', async (req, res) => {
     const { token } = req.params;
     console.log('in verify/:token');
     try {
         // Find the member by verification token
-        const member = yield Member.findOne({ verificationToken: token });
+        const member = await Member.findOne({ verificationToken: token });
         if (!member) {
             res.status(404).json({ message: 'Invalid verification token' });
             return;
@@ -2065,13 +2151,13 @@ router.get('/verify/:token', (req, res) => __awaiter(void 0, void 0, void 0, fun
         member.status = 'verified'; // or whatever your verified status is
         member.verificationToken = undefined; // Clear the token
         member.isVerified = true; // Set the isVerified flag to true
-        yield member.save();
+        await member.save();
         res.status(200).json({ message: 'Email verified successfully!' });
     }
     catch (error) {
         console.error('Error during verification:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
-}));
+});
 export default router;
 //# sourceMappingURL=Members.js.map

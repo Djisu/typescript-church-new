@@ -1,9 +1,9 @@
 import express, { NextFunction, Request, Response, Router  } from 'express';
 import mongoose from 'mongoose';
-import { Event, IEvent } from '../../../models/Events.js';
+import { Event, IEvent } from '../../../models/Events';
 
-import { sendTextMessage } from '../../utils/textMessaging.js';
-import { Member } from '../../../models/Members.js';
+import { sendTextMessage } from '../../utils/textMessaging';
+import { Member } from '../../../models/Members';
 //import sendResetEmailMember from '../../utils/email/sendResetEmailMember';
 
 import nodemailer from 'nodemailer';
