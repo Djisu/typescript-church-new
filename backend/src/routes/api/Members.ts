@@ -1,5 +1,5 @@
-import express, { NextFunction, Request, Response } from 'express';
-import { Member, IMember } from '../../../models/Members';
+import express, { Router,   Request, Response} from 'express';
+import { Member, IMember } from '../../../models/Members.js';
 import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
 import { check, validationResult } from 'express-validator';
 
@@ -9,10 +9,10 @@ import mongoose from 'mongoose';
 
 import jwt from 'jsonwebtoken';
 
-import { sendResetEmailMember } from '../../utils/emailMember';
-import authenticateJWT from '../../utils/authenticateJWT';
+import { sendResetEmailMember } from '../../utils/emailMember.js';
+import authenticateJWT from '../../utils/authenticateJWT.js';
 
-import config from '../../utils/config';
+import config from '../../utils/config.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -108,21 +108,21 @@ const transport = nodemailer.createTransport({
  *                   example: "Internal server error"
  */
 // Endpoint to capture phone number
-router.post('/capture-phone', async (req: Request, res: Response): Promise<void> => {
-    const { consent } = req.body;
+router.post('/capture-phone', async (req: Request, res: Response): Promise<any> => {
+    const { consent, phoneNumber } = req.body;
 
     if (!consent) {
-       res.status(400).send('Consent required');
-       return
+      return res.status(400).send('Consent required');
+       
     }
 
     // Capture phone number logic here (replace with actual capture logic)
-    const phoneNumber = req.body.phoneNumber; // Replace with actual logic
+    console.log('Capturing phone number:', phoneNumber);
 
     // Check for phone number
     if (!phoneNumber) {
-        res.status(400).json({ error: 'Phone number is required' });
-        return;
+        return res.status(400).json({ error: 'Phone number is required' });
+        
     }
 
     // Find the member based on the phone number
@@ -135,11 +135,11 @@ router.post('/capture-phone', async (req: Request, res: Response): Promise<void>
             attended: true,
         });
         await member.save();
-        res.status(200).send('Attendance recorded successfully');
-        return
+        return res.status(200).send('Attendance recorded successfully');
+        
     } else {
-        res.status(404).send('Member not found');
-        return
+        return res.status(404).send('Member not found');
+        
     }
 });  
   

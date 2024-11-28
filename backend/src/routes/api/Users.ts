@@ -6,7 +6,7 @@ import fs from 'fs';
 // import { check, validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
 
-import { User, IUser, UserSchema } from '../../../models/Users';
+import { User, IUser, UserSchema } from '../../../models/Users.js';
 
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname, join } from 'path';

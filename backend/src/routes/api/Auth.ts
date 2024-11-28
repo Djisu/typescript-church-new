@@ -25,6 +25,8 @@ if (nodeEnv === 'development'){
     frontendUrl = "http://localhost:5173";
 } else if (nodeEnv === 'production'){
     frontendUrl = "https://typescript-church-new.onrender.com";
+} else if (nodeEnv === 'test'){
+    console.log('Just testing')
 } else {
     console.log('Invalid node environment variable') //.slice()
 }
@@ -129,30 +131,37 @@ router.post('/login', [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
+         res.status(400).json({ errors: errors.array() });
+         return
     }
 
     const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+         res.status(400).json({ error: 'Email and password are required' });
+         return
+    }
 
     try {
         const user: IUser | null = await User.findOne({ email });
 
         if (!user) {
-           res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-           return
+             res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+             return
         }
         
         if (user) {       
             const isMatch = await user.comparePassword(password);
 
             if (!isMatch) {
-                res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-                return
+                 res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
+                 return
             }
 
             const payload = {
                 user: {
-                    id: user._id,
+                    _id: user._id,
                     username: user.username,
                     email: user.email,
                     role: user.role,
@@ -168,11 +177,13 @@ router.post('/login', [
             );
 
             // Send success response
-            res.json({token, user}) 
+             res.json({token, user}) 
+             return
         }
     } catch (err) {
         console.error('Error in /api/auth/login route:', err);
-        res.status(500).json({ error: 'Server error' });
+         res.status(500).json({ error: 'Server error' });
+         return
     }
 });
 

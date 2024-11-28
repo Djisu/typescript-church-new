@@ -1,189 +1,89 @@
-import { beforeAll, afterAll, beforeEach, describe, it, expect, vi } from 'vitest';
+/// <reference types="vitest/globals" />
 import request from 'supertest';
-import express, { Request, Response, Router } from 'express';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import { check, validationResult } from 'express-validator';
+import express from 'express';
 import jwt from 'jsonwebtoken';
-import mongoose, { ConnectOptions } from 'mongoose';
-import { User, IUser } from '../../models/Users'; // Adjust the import based on your structure
-import config from '../utils/config'; // Ensure this path is correct
-
-// Create a mock for the User model
-let mockFindOne = vi.fn();
-
-// Mock the User model
-vi.mock('../../models/Users', () => {
-    class User {
-        async comparePassword(): Promise<boolean> {
-            return true; // assuming it resolves to true
-        }
-        async save(): Promise<this> {
-            return this; // Return the instance on save
-        }
-    }
-
-    return {
-        User: User,
-    };
-});
-
-// Mock the jwt module
-vi.mock('jsonwebtoken', () => ({
-    sign: vi.fn().mockImplementation(() => 'token'),
-    verify: vi.fn().mockImplementation(() => ({ id: 'userId' })),
-    decode: vi.fn().mockImplementation(() => ({ id: 'userId' })),
-}));
-
-// Mock the express module
-vi.mock('express', async (importOriginal) => {
-    const actualExpress = await importOriginal<typeof import('express')>();
-
-    return {
-        ...actualExpress,
-        json: vi.fn().mockImplementation(() => (req: Request, res: Response, next: Function) => next()),
-    };
-});
+//import { check, validationResult } from 'express-validator';
+import authRouter from '../routes/api/Auth.js'; // adjust the path to your auth router
+import { User } from '../../models/Users.js'; // adjust the path to your User model
+import { vi, Mock } from 'vitest'; // Import the vi object for mocks
 
 const app = express();
 app.use(express.json());
+app.use('/api/auth', authRouter);
 
-let mongoServer: MongoMemoryServer;
+const Mock = vi.fn(); // Mock the User model
 
-// Use the provided hashed password
-const hashedPassword = '$2b$10$4itzWETfVF7GYNknGCleK.1qnWO2bIEKavgINTzxoqiEAjg/CyfX';
-
-async function createTestUser(email: string, password: string): Promise<void> {
-    const user = new User({ email, password }); // Use the hashed password directly
-    await user.save();
-}
-
-beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 20000,
-        socketTimeoutMS: 45000,
-    } as ConnectOptions);
-
-    await createTestUser('pfleischer2002@yahoo.co.uk', hashedPassword);
-});
-
-afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
-
-const router = Router();
-
-// Define your login route
-router.post('/login', [
-    check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
-], async (req: Request, res: Response): Promise<void> => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() });
-        return;
-    }
-
-    const { email, password } = req.body;
-
-    try {
-        const user: IUser | null = await User.findOne({ email });
-
-        if (!user) {
-            res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-            return;
-        }
-
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-            res.status(400).json({ errors: [{ msg: 'Invalid Credentials' }] });
-            return;
-        }
-
-        const payload = { user: { id: user._id, username: user.username, email: user.email, role: user.role, avatar: user.avatar } };
-        const token = jwt.sign(payload, config.jwtSecret as string, { expiresIn: 360000 });
-        res.json({ token, user });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-app.use('/api/auth', router);
+// Mock the User model
+vi.mock('../../models/Users.js');
 
 describe('POST /api/auth/login', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+  
+  afterEach(() => {
+    vi.clearAllMocks(); // Clear mocks after each test
+  });
+
+  it('should log in successfully and return a token and user details', async () => {
+    // Mocking a user result
+    const mockUser = {
+      _id: 'someUserId',
+      username: 'john_doe',
+      email: 'user@example.com',
+      role: 'user',
+      avatar: 'https://example.com/avatar.jpg',
+      comparePassword: vi.fn().mockResolvedValue(true), // Mock comparison to return true
+    };
+
+    // Mock the User model to find the user
+    vi.spyOn(User, 'findOne').mockResolvedValue(mockUser);
+    const token = jwt.sign({ user: { id: mockUser._id } }, 'your_jwt_secret'); // Use your real JWT secret
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'password123' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('token');
+    expect(response.body.user).toEqual({
+      _id: mockUser._id,
+      username: mockUser.username,
+      email: mockUser.email,
+      role: mockUser.role,
+      avatar: mockUser.avatar,
+    });
+  });
+
+  it('should return 400 if credentials are invalid', async () => {
+    //(User.findOne as vi.Mock).mockResolvedValue(null); // Simulate user not found
+    vi.spyOn(User, 'findOne').mockResolvedValue(null);
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'wrongpassword' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ errors: [{ msg: 'Invalid Credentials' }] });
+  });
+
+  it('should return 400 for validation errors', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'invalid-email', password: '123' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors.length).toBeGreaterThan(0); // Check if there are validation errors
+  });
+  
+  it('should return 500 if an error occurs', async () => {
+    vi.spyOn(User, 'findOne').mockImplementationOnce(() => {
+      throw new Error('Database error'); // Simulate an error
     });
 
-    it('should return token and user on successful login', async () => {
-        const mockUser: Partial<IUser> = {
-            _id: '1',
-            username: 'Paul Jesu Fleischer',
-            email: 'pfleischer2002@yahoo.co.uk',
-            role: 'admin',
-            avatar: 'avatar.png',
-            comparePassword: vi.fn().mockResolvedValue(true), // Simulate successful password comparison
-        };
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'password123' });
 
-        mockFindOne.mockResolvedValue(mockUser); // Mock findOne to return the mock user
-
-        const response = await request(app)
-            .post('/api/auth/login')
-            .send({ email: 'pfleischer2002@yahoo.co.uk', password: 'password123' }); // Provide the plain text password
-
-        expect(response.status).toBe(200);
-        expect(response.body.token).toBeDefined();
-        expect(response.body.user).toEqual({
-            id: mockUser._id,
-            username: mockUser.username,
-            email: mockUser.email,
-            role: mockUser.role,
-            avatar: mockUser.avatar,
-        });
-    });
-
-    it('should return 400 if user does not exist', async () => {
-        mockFindOne.mockResolvedValue(null); // Simulate no user found
-
-        const response = await request(app)
-            .post('/api/auth/login')
-            .send({ email: 'nonexistent@example.com', password: 'password123' });
-
-        expect(response.status).toBe(400);
-        expect(response.body.errors[0].msg).toBe('Invalid Credentials');
-    });
-
-    it('should return 400 if password does not match', async () => {
-        const mockUser: Partial<IUser> = {
-            _id: '1',
-            username: 'testUser',
-            email: 'pfleischer2002@yahoo.co.uk',
-            comparePassword: vi.fn().mockResolvedValue(false), // Simulate password mismatch
-        };
-
-        mockFindOne.mockResolvedValue(mockUser); // Return the mock user
-
-        const response = await request(app)
-            .post('/api/auth/login')
-            .send({ email: 'pfleischer2002@yahoo.co.uk', password: 'wrongPassword' });
-
-        expect(response.status).toBe(400);
-        expect(response.body.errors[0].msg).toBe('Invalid Credentials');
-    });
-
-    it('should return 500 on server error', async () => {
-        mockFindOne.mockRejectedValue(new Error('Database error')); // Simulate a database error
-
-        const response = await request(app)
-            .post('/api/auth/login')
-            .send({ email: 'pfleischer2002@yahoo.co.uk', password: 'password123' });
-
-        expect(response.status).toBe(500);
-        expect(response.body.error).toBe('Server error');
-    });
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Server error' });
+  });
 });

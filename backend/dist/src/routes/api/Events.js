@@ -1,8 +1,8 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { Event } from '../../../models/Events';
-import { sendTextMessage } from '../../utils/textMessaging';
-import { Member } from '../../../models/Members';
+import { Event } from '../../../models/Events.js';
+import { sendTextMessage } from '../../utils/textMessaging.js';
+import { Member } from '../../../models/Members.js';
 //import sendResetEmailMember from '../../utils/email/sendResetEmailMember';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
@@ -13,6 +13,7 @@ const appPassword = process.env.APP_PASSWORD;
 const emailUser = process.env.EMAIL_USER;
 const port = process.env.PORT || 3001;
 const nodeEnv = process.env.NODE_ENV;
+console.log('Node environment:', nodeEnv);
 if (nodeEnv === 'development') {
     frontendUrl = "http://localhost:5173";
 }

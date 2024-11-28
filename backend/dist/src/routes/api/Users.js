@@ -5,7 +5,7 @@ import fs from 'fs';
 // import usersData from '../../usersData';
 // import { check, validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
-import { User } from '../../../models/Users';
+import { User } from '../../../models/Users.js';
 import { fileURLToPath } from 'url';
 import { dirname as pathDirname } from 'path';
 const router = express.Router();

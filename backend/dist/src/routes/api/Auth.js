@@ -118,8 +118,14 @@ router.post('/login', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         res.status(400).json({ errors: errors.array() });
+        return;
     }
     const { email, password } = req.body;
+    // Validate input
+    if (!email || !password) {
+        res.status(400).json({ error: 'Email and password are required' });
+        return;
+    }
     try {
         const user = await User.findOne({ email });
         if (!user) {
@@ -134,7 +140,7 @@ router.post('/login', [
             }
             const payload = {
                 user: {
-                    id: user._id,
+                    _id: user._id,
                     username: user.username,
                     email: user.email,
                     role: user.role,
@@ -145,11 +151,13 @@ router.post('/login', [
             const token = jwt.sign(payload, config.jwtSecret, { expiresIn: 360000 });
             // Send success response
             res.json({ token, user });
+            return;
         }
     }
     catch (err) {
         console.error('Error in /api/auth/login route:', err);
         res.status(500).json({ error: 'Server error' });
+        return;
     }
 });
 // Reset password

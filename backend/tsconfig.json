@@ -1,24 +1,24 @@
 {
-    "compilerOptions": {
-      "target": "ESnext", // or "esnext"
-      "module": "ESnext", // Update this line
-      "outDir": "./dist",
-      "resolveJsonModule": true,
-      "noEmit": false,
-      "strict": true,
-      "esModuleInterop": true,
-      "moduleResolution": "node",
-      "sourceMap": true,
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true,
-      "typeRoots": ["src/@types", "node_modules/@types"],
-      "types": ["node", "express", "multer", "jest"]
-    },
-    "include": ["src/**/*", "src/types.d.ts", "tests/**/*"],
-    "exclude": [
-      "node_modules",
-      "dist"
-    ]
-  }
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+  
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["node_modules/@types", "src/@types"],
+    "types": ["node", "express", "multer"]
+  },
+  "include": ["src/**/*", "src/types.d.ts", "tests/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

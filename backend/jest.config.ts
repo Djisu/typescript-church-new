@@ -1,10 +1,15 @@
-// jest.config.mjs
+
+
+
+
+
+// // jest.config.mjs
 export default {
     preset: 'ts-jest',
     testEnvironment: 'node',
     moduleNameMapper: {
         '\\.(css|less|scss)$': 'identity-obj-proxy',
-      },
+    },
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
     transform: {

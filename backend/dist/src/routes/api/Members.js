@@ -1,14 +1,14 @@
 import express from 'express';
-import { Member } from '../../../models/Members';
+import { Member } from '../../../models/Members.js';
 import nodemailer from 'nodemailer';
 import { check, validationResult } from 'express-validator';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { sendResetEmailMember } from '../../utils/emailMember';
-import authenticateJWT from '../../utils/authenticateJWT';
-import config from '../../utils/config';
+import { sendResetEmailMember } from '../../utils/emailMember.js';
+import authenticateJWT from '../../utils/authenticateJWT.js';
+import config from '../../utils/config.js';
 import dotenv from 'dotenv';
 dotenv.config();
 let frontendUrl = ""; //process.env.FRONTEND_URL; // Access the environment variable
@@ -100,17 +100,15 @@ const transport = nodemailer.createTransport({
  */
 // Endpoint to capture phone number
 router.post('/capture-phone', async (req, res) => {
-    const { consent } = req.body;
+    const { consent, phoneNumber } = req.body;
     if (!consent) {
-        res.status(400).send('Consent required');
-        return;
+        return res.status(400).send('Consent required');
     }
     // Capture phone number logic here (replace with actual capture logic)
-    const phoneNumber = req.body.phoneNumber; // Replace with actual logic
+    console.log('Capturing phone number:', phoneNumber);
     // Check for phone number
     if (!phoneNumber) {
-        res.status(400).json({ error: 'Phone number is required' });
-        return;
+        return res.status(400).json({ error: 'Phone number is required' });
     }
     // Find the member based on the phone number
     const member = await Member.findOne({ phone: phoneNumber });
@@ -121,12 +119,10 @@ router.post('/capture-phone', async (req, res) => {
             attended: true,
         });
         await member.save();
-        res.status(200).send('Attendance recorded successfully');
-        return;
+        return res.status(200).send('Attendance recorded successfully');
     }
     else {
-        res.status(404).send('Member not found');
-        return;
+        return res.status(404).send('Member not found');
     }
 });
 /**
