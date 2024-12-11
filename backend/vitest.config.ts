@@ -7,5 +7,7 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],  // Specify coverage reporters
     },
+    include: ['src/**/*.{test,spec}.{js,ts}', '**/*.{test,spec}.{js,ts}'],
+    exclude: ['node_modules', 'dist', 'cypress', '.idea', '.git'],
   },
 });

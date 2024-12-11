@@ -1,0 +1,13 @@
+// tsconfig.test.json
+{
+    "extends": "./tsconfig.json",
+    "include": ["./tests"],
+    "references": [{ "path": "./tsconfig.src.json" }],
+    "compilerOptions": {
+      "composite": true,
+      "target": "esnext",
+      "module": "esnext",
+      // Include test-specific types.
+      "types": ["@types/node", "vitest/globals"]
+    }
+  }

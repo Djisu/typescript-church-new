@@ -1,24 +1,27 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "es2020",
+    "module": "esnext",
     "outDir": "./dist",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
   
     "strict": true,
+    
+
     "esModuleInterop": true,
     "moduleResolution": "node",
     "sourceMap": true,
 
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "types": ["node", "express", "multer", "vitest"],
     "typeRoots": ["node_modules/@types", "src/@types"],
-    "types": ["node", "express", "multer"]
+   
   },
-  "include": ["src/**/*", "src/types.d.ts", "tests/**/*"],
+  "include": ["src/**/*.ts", "src/types.d.ts", "tests/**/*.ts", "*.spec.ts"],
   "exclude": [
     "node_modules",
     "dist"
-  ]
+  ],
 }

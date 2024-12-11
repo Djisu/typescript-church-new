@@ -18,6 +18,9 @@ if (nodeEnv === 'development') {
 else if (nodeEnv === 'production') {
     frontendUrl = "https://typescript-church-new.onrender.com";
 }
+else if (nodeEnv === 'test') {
+    console.log('Just testing');
+}
 else {
     console.log('Invalid node environment variable'); //.slice()
 }
@@ -294,43 +297,35 @@ router.post('/request-password-reset', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
     console.log('in BACKEND Auth.ts  /reset-password', token, newPassword);
-    const isValidTokenFormat = (token) => /^[a-f0-9]{64}$/.test(token); // Adjust regex based on token length
+    const isValidTokenFormat = (token) => /^[a-f0-9]{64}$/.test(token);
     if (!isValidTokenFormat(token)) {
         res.status(400).json({ message: 'Invalid token format.' });
         return;
     }
-    const userCheck = await User.findOne({ resetToken: token });
-    if (!userCheck) {
+    const user = await User.findOne({ resetToken: token });
+    if (!user) {
         res.status(400).json({ message: 'Token not found.' });
         return;
     }
-    //compare userCheck to token
-    if (userCheck.resetToken !== token) {
-        res.status(400).json({ message: 'Token does not match.' });
-        return;
-    }
-    const user = await User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
-    if (!user) {
-        res.status(400).json({ message: 'Invalid or expired token.' });
-    }
-    // At this point, the token is valid and not expired, but you can check for corruption as well
-    if (user && user.resetToken !== token) {
-        res.status(400).json({ message: 'Token does not match.' });
-        return;
-    }
-    // Validate new password (e.g., length, complexity)
+    // Validate new password length
     if (newPassword.length < 6) {
         res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+        return;
+    }
+    // Check if the token is expired
+    if (!user.resetTokenExpiration || !(user.resetTokenExpiration instanceof Date) || user.resetTokenExpiration.getTime() < Date.now()) {
+        res.status(400).json({ message: 'Invalid or expired token.' });
+        return;
     }
     // Hash the password
     const salt = await bcrypt.genSalt(10);
-    if (user) {
-        user.password = await bcrypt.hash(newPassword, salt);
-        user.resetToken = undefined; // Clear the token
-        user.resetTokenExpiration = undefined; // Clear expiration
-        await user.save();
-        res.status(200).json({ message: 'Password has been reset successfully.' });
-    }
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetToken = undefined; // Clear the token
+    user.resetTokenExpiration = undefined; // Clear expiration
+    await user.save();
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+    res.end();
+    return;
 });
 export default router;
 //# sourceMappingURL=Auth.js.map
